@@ -11,6 +11,16 @@ import java.util.Iterator;
  *
  * @author arno
  * source: http://stackoverflow.com/questions/1034473/java-iterate-bits-in-byte-array
+ * 
+ * -------------- USAGE 
+ 
+    ByteArrayBitIterable bitStream = new ByteArrayBitIterable(block);
+    for (boolean isBitSet : bitStream) {
+    }
+ * 
+ * 
+ * 
+ * 
  */
 public class ByteArrayBitIterable implements Iterable<Boolean> {
     private final byte[] array;

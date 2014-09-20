@@ -12,7 +12,7 @@ package com.teamawesome.des;
 public class ByteHelper {
     
 
-    // joins two blocks each containing 4 significant bits
+    // joins two blocks each containing 4 significant bits (4 right most bits contain data)
     public static byte joinBlocks(byte block1, byte block2) {
         return (byte) (block1 << 4 | block2);
     }
