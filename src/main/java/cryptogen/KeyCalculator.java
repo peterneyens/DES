@@ -1,4 +1,6 @@
-package com.teamawesome.des;
+package cryptogen;
+
+import helpers.ByteHelper;
 
 /**
  *
