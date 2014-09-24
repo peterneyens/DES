@@ -14,6 +14,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.time.Clock;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -82,6 +83,7 @@ public class CryptoGen extends JFrame implements ActionListener {
         gbc.gridx = 2;
         gbc.gridy = 3;
         btnDesStart = new JButton("Start Encryption");
+        btnDesStart.addActionListener(this);
         pDes.add(btnDesStart, gbc);
 
         //des paneel toevoegen aan frame
@@ -186,6 +188,13 @@ public class CryptoGen extends JFrame implements ActionListener {
                     txtConsole.append("Fatal Error (main): " + ex.getMessage() + "\n\r");
                 }
             }
+        } else if (e.getSource() == btnDesStart) {
+            System.out.println("Start encrypting file");
+            txtConsole.append("Encrypting started!" + "\n\r");
+            long before = System.currentTimeMillis();
+            DesEncryption.encryptFile(txtDesFile.getText(), txtDesKey.getText());
+            long after = System.currentTimeMillis();
+            txtConsole.append("Time encrypting in milliseconds " + (after - before));
         }
 
     }
