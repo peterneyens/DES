@@ -124,13 +124,9 @@ public class Stenagography {
         graphics.drawRenderedImage(selectedImage, null);
         graphics.dispose(); //release all allocated memory for this image
 
-<<<<<<< HEAD
-        return selectedImage;
-=======
-        
-        // return selectedImage; -- return same image? probably not what was meant..
+
         return new_img;
->>>>>>> Cornel
+
     }
 
     /*
