@@ -14,7 +14,11 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+<<<<<<< HEAD
 import java.io.File;
+=======
+import java.time.Clock;
+>>>>>>> feature-des-encryption-base
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -84,6 +88,7 @@ public class CryptoGen extends JFrame implements ActionListener {
         gbc.gridx = 2;
         gbc.gridy = 3;
         btnDesStart = new JButton("Start Encryption");
+        btnDesStart.addActionListener(this);
         pDes.add(btnDesStart, gbc);
 
         //des paneel toevoegen aan frame
@@ -188,7 +193,7 @@ public class CryptoGen extends JFrame implements ActionListener {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 writeImage(fch.getSelectedFile().getAbsolutePath(), "bmp", img);
             }
-            
+
             txtStenagoText.setText("");
             
             txtConsole.append("Encoding finished!" + "\n\r");
@@ -203,6 +208,13 @@ public class CryptoGen extends JFrame implements ActionListener {
             txtStenagoText.setText(str);
             
             txtConsole.append("Decoding finished!" + "\n\r");
+        } else if (e.getSource() == btnDesStart) {
+            System.out.println("Start encrypting file");
+            txtConsole.append("Encrypting started!" + "\n\r");
+            long before = System.currentTimeMillis();
+            DesEncryption.encryptFile(txtDesFile.getText(), txtDesKey.getText());
+            long after = System.currentTimeMillis();
+            txtConsole.append("Time encrypting in milliseconds " + (after - before));
         }
 
     }

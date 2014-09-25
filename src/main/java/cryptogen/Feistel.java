@@ -108,9 +108,9 @@ public class Feistel {
             // get bit value
             byte bit = (isBitSet) ? (byte) 1 : (byte) 0;
 
-            if (count % 6 == 0)
+            if (count % 6 == 0 && count != 0) // count starts at 0, so byteIndex was incremented to 1 directly
                 byteIndex++;
-            
+
             helperBlock[byteIndex] = (byte) ((helperBlock[byteIndex] << 1) | bit);
             count++;
         }
