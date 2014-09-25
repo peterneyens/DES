@@ -1,1 +1,6 @@
 /target/
+CryptoGen/build/classes/.netbeans_automatic_build
+CryptoGen/build/classes/.netbeans_update_resources
+CryptoGen/dist/CryptoGen.jar
+CryptoGen/dist/README.TXT
+CryptoGen/nbproject/private/private.xml
