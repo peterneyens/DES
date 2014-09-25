@@ -14,11 +14,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-<<<<<<< HEAD
 import java.io.File;
-=======
-import java.time.Clock;
->>>>>>> feature-des-encryption-base
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
