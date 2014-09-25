@@ -5,15 +5,11 @@
  */
 package cryptogen.stenagography;
 
-import java.awt.Graphics2D;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.awt.image.WritableRaster;
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.InputStream;
-import java.net.URLConnection;
 import javax.imageio.ImageIO;
 import javax.swing.JTextArea;
 
@@ -39,6 +35,10 @@ public class Stenagography {
 
         //foto omzetten naar een byte array
         byte bImg[] = getBytes(img);
+        
+        /*for (int i = 0; i < bImg.length; i++) {
+            System.out.println(Integer.toBinaryString(bImg[i]));
+        }*/
 
         //tekst omzetten naar een byte array
         byte bMsg[] = msg.getBytes();
@@ -52,13 +52,12 @@ public class Stenagography {
         //tekst in de foto zetten
         bImg = addText(bImg, bMsg, 32); //32 offset voor de lengte
 
-        //compare(getBytes(selectedImage), bImg, bMsg.length * 8 + 32);
         //byte array omzetten naar foto
         img = getImage(bImg);
 
         console.append("Encoding has been completed!" + "\n\r");
 
-        return (img);
+        return img;
     }
 
     public static String decode(BufferedImage img) {
@@ -103,7 +102,7 @@ public class Stenagography {
             img = ImageIO.read(f);
         } catch (Exception ex) {
             if (console != null) {
-                console.append("Fatal Error (getImage(String)): " + ex.getMessage() + "\n\r");
+                console.append("Fatal Error: " + ex.getMessage() + "\n\r");
             }
         }
         return img;
@@ -113,24 +112,12 @@ public class Stenagography {
      Kopieerd de ingegeven foto en geeft ene kopie hiervan terug
      */
     public static BufferedImage cloneImage(BufferedImage selectedImage) {
-        /*BufferedImage image = new BufferedImage(selectedImage.getWidth(), selectedImage.getHeight(), selectedImage.getType());
-         Graphics g = image.getGraphics();
-         g.drawImage(selectedImage, 0, 0, null);
-         g.dispose();*/
+        BufferedImage image = new BufferedImage(selectedImage.getWidth(), selectedImage.getHeight(), selectedImage.getType());
+        Graphics g = image.getGraphics();
+        g.drawImage(selectedImage, 0, 0, null);
+        g.dispose();
 
-        //create new_img with the attributes of image
-        BufferedImage new_img = new BufferedImage(selectedImage.getWidth(), selectedImage.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
-        Graphics2D graphics = new_img.createGraphics();
-        graphics.drawRenderedImage(selectedImage, null);
-        graphics.dispose(); //release all allocated memory for this image
-
-<<<<<<< HEAD
-        return selectedImage;
-=======
-        
-        // return selectedImage; -- return same image? probably not what was meant..
-        return new_img;
->>>>>>> Cornel
+        return image;
     }
 
     /*
@@ -261,7 +248,7 @@ public class Stenagography {
             }
         } catch (Exception ex) {
             if (console != null) {
-                console.append("Fatal Error addText(byte[], byte[], int): " + ex.getMessage() + "\n\r");
+                console.append("Fatal Error: " + ex.getMessage() + "\n\r");
             }
         }
 
@@ -275,18 +262,12 @@ public class Stenagography {
         byte[] bImg = null;
 
         try {
-            /*ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-             ImageIO.write(img, "BMP", bStream);
-             bImg = bStream.toByteArray();*/
-
-            WritableRaster raster = img.getRaster();
-            DataBufferByte buffer = (DataBufferByte) raster.getDataBuffer();
-
-            return buffer.getData();
-
+            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+            ImageIO.write(img, "bmp", bStream);
+            bImg = bStream.toByteArray();
         } catch (Exception ex) {
             if (console != null) {
-                console.append("Fatal Error (getBytes(BufferedImage)): " + ex.getMessage() + "\n\r");
+                console.append("Fatal Error: " + ex.getMessage() + "\n\r");
             }
         }
 
@@ -344,63 +325,20 @@ public class Stenagography {
      Een foto byte array omzetten naar een foto
      */
     public static BufferedImage getImage(byte[] arr) {
+        
         /*for (int i = 0; i < arr.length; i++) {
-         System.out.println(Integer.toBinaryString(arr[i]));
-         }*/
-        //System.out.println(getType(arr));
+            System.out.println(Integer.toBinaryString(arr[i]));
+        }*/
+        
         BufferedImage img = null;
 
-        /*String[] names = ImageIO.getWriterFormatNames();
-        for (String name : names) {
-            System.out.println(name);
-        }*/
-
         try {
-            InputStream in = new ByteArrayInputStream(arr);
-            img = ImageIO.read(in);
+            img = ImageIO.read(new ByteArrayInputStream(arr));
         } catch (Exception ex) {
             if (console != null) {
-                console.append("Fatal Error (getImage(byte[])): " + ex.getMessage() + "\n\r");
+                console.append("Fatal Error: " + ex.getMessage() + "\n\r");
             }
         }
-        if (img == null) {
-            throw new IllegalArgumentException("Can not convert byte array to image!");
-        }
-
         return img;
-    }
-
-    //comparing 2 byte arrays for debugging
-    public static void compare(byte[] val1, byte[] val2, int len) {
-        if (val1.length != val2.length) {
-            System.out.println("2 arrays are not the same length!");
-        } else {
-            for (int i = 0; i < len; i++) {
-                System.out.print("Index " + i + ": " + Integer.toBinaryString(val1[i]) + " - " + Integer.toBinaryString(val2[i]));
-
-                if (val1[i] != val2[i]) {
-                    System.out.println("!!!");
-                } else {
-                    System.out.println();
-                }
-            }
-        }
-    }
-
-    //check which type of file a byte array is
-    //http://stackoverflow.com/questions/10040330/how-to-extract-file-extension-from-byte-array
-    public static String getType(byte[] arr) {
-        String mimeType = "";
-
-        try {
-            InputStream is = new BufferedInputStream(new ByteArrayInputStream(arr));
-            mimeType = URLConnection.guessContentTypeFromStream(is);
-        } catch (Exception ex) {
-            if (console != null) {
-                console.append("Fatal Error (getType(byte[])): " + ex.getMessage() + "\n\r");
-            }
-        }
-
-        return mimeType;
     }
 }
