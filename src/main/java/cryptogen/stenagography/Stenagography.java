@@ -5,15 +5,13 @@
  */
 package cryptogen.stenagography;
 
-import java.awt.Graphics2D;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
-import java.net.URLConnection;
 import javax.imageio.ImageIO;
 import javax.swing.JTextArea;
 
@@ -27,6 +25,10 @@ public class Stenagography {
     public static boolean DEBUG = false;
 
     /*
+     *Encrypt an image with text, the output file will be of type .png
+     *@param path           Het pad naar de bmp foto
+     *@param msg            het bericht dat geencodeerd moet worden
+    
      gebaseerd op http://www.dreamincode.net/forums/topic/27950-steganography/
      */
     public static BufferedImage encode(String path, String msg) {
@@ -37,6 +39,14 @@ public class Stenagography {
         //kopie maken van geselecteerde foto zodat de foto aangepast kan worden in Java (userspace)
         BufferedImage img = cloneImage(selectedImage);
 
+        img = encodeMessage(img, msg);
+
+        console.append("Encoding has been completed!" + "\n\r");
+
+        return (img);
+    }
+
+    public static BufferedImage encodeMessage(BufferedImage img, String msg) {
         //foto omzetten naar een byte array
         byte bImg[] = getBytes(img);
 
@@ -47,48 +57,70 @@ public class Stenagography {
         byte bLen[] = getBytes(bMsg.length);
 
         //lengte van de tekst in de eerste 32 bits van de foto zetten
-        bImg = addText(bImg, bLen, 0);
+        addText(bImg, bLen, 0);
 
         //tekst in de foto zetten
-        bImg = addText(bImg, bMsg, 32); //32 offset voor de lengte
+        addText(bImg, bMsg, 32); //32 offset voor de lengte
 
         //compare(getBytes(selectedImage), bImg, bMsg.length * 8 + 32);
         //byte array omzetten naar foto
-        img = getImage(bImg);
-
-        console.append("Encoding has been completed!" + "\n\r");
-
-        return (img);
+        //img =  getImage(bImg);
+        return img;
     }
 
-    public static String decode(BufferedImage img) {
-        //foto omzetten naar een byte array van rgb waardes (r, g, b, r, g, b, ...)
-        byte bImg[] = getBytes(img);
+    public static String decode(String path) {
+        //foto ophalen van disk
+        BufferedImage selectedImage = getImage(path);
 
-        String msg = "";
+        //kopie maken van geselecteerde foto zodat de foto aangepast kan worden in Java (userspace)
+        BufferedImage img = cloneImage(selectedImage);
 
-        int max = (int) bImg.length; //aantal letters dat max in img passen
-
-        //loop door elke letter = 8 bytes
-        for (int i = 0; i < max; i++) {
-            Byte ascii = 0;
-
-            //loop door elke byte van de 8 bytes
-            for (int j = 0; j < 8; j++) {
-                //pak de desbetreffende byte van de afbeelding en voeg deze toe aan de assci byte om zo na 8 loops een ascii waarde te krijgen  
-                if ((bImg[i * 8 + j] >> j) == 1) // de jde bit opvragen dmv een right shift
-                {
-                    ascii = (byte) (bImg[i * 8 + j] | (1 << j));
-                } else {
-                    ascii = (byte) (bImg[i * 8 + j] & ~(1 << j));
-                }
-            }
-
-            //asci is nu compleet --> omzetten naar tekst en toevoegen aan uitkomst
-            msg = msg + ascii.toString();
-        }
+        //retrieve message from image
+        String msg = decodetext(img);
 
         return msg;
+    }
+
+    public static String decodetext(BufferedImage img) {
+        //convert image to byte array
+        byte[] bImg = getBytes(img);
+
+        //offset definieren voor later
+        int offset = 32;
+
+        //retrieve lengths from the first bytes. 0-> 31 bits
+        int length = 0;
+
+        for (int i = 0; i < offset; i++) {
+            //de lengte byte doorschuiven naar links en de laatste but van de image byte op de ereste plaats zetten dmv OR
+            //
+            //0000 0000 0000 0000 0000 0000 0000 0000
+            //0000 0000 0000 0000 0000 0000 0000 0000 = doorschuiven naar links
+            //
+            //                             [0001 0011 = image byte i]
+            //                             [0000 0001               ]
+            //                              --------- & = AND
+            //                              0000 0001 = laatste bit
+            //
+            //--------------------------------------- | = OR tussen doogeschoven lengte en laatste bit
+            //0000 0000 0000 0000 0000 0000 0000 0001
+            length = (length << 1) | bImg[i] & 1;
+        }
+
+        //byte array aanmaken voor de tekst nu we de lengte weten
+        byte[] bMsg = new byte[length];
+
+        //elke byte van de tekst loopen om de laatste bits  op de halen van de tekst
+        for (int i = 0; i < bMsg.length; i++) {
+            //8 keer de laatste bit ophalen van de byte van de foto om zo de tekst byte o pte bouwen
+            for (int bit = 0; bit < 8; ++bit, ++offset) {
+                //zelfde principe als de lengte
+                bMsg[i] = (byte) ((bMsg[i] << 1) | (bImg[offset] & 1));
+            }
+        }
+
+        //converteer message byte array naar string
+        return new String(bMsg);
     }
 
     /*
@@ -99,7 +131,7 @@ public class Stenagography {
         BufferedImage img = null;
 
         try {
-            //covnerteer the bestand naar een foto
+            //converteer the bestand naar een foto
             img = ImageIO.read(f);
         } catch (Exception ex) {
             if (console != null) {
@@ -113,20 +145,12 @@ public class Stenagography {
      Kopieerd de ingegeven foto en geeft ene kopie hiervan terug
      */
     public static BufferedImage cloneImage(BufferedImage selectedImage) {
-        /*BufferedImage image = new BufferedImage(selectedImage.getWidth(), selectedImage.getHeight(), selectedImage.getType());
-         Graphics g = image.getGraphics();
-         g.drawImage(selectedImage, 0, 0, null);
-         g.dispose();*/
+        BufferedImage image = new BufferedImage(selectedImage.getWidth(), selectedImage.getHeight(), selectedImage.getType());
+        Graphics g = image.getGraphics();
+        g.drawImage(selectedImage, 0, 0, null);
+        g.dispose();
 
-        //create new_img with the attributes of image
-        BufferedImage new_img = new BufferedImage(selectedImage.getWidth(), selectedImage.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
-        Graphics2D graphics = new_img.createGraphics();
-        graphics.drawRenderedImage(selectedImage, null);
-        graphics.dispose(); //release all allocated memory for this image
-
-
-        return new_img;
-
+        return image;
     }
 
     /*
@@ -231,7 +255,7 @@ public class Stenagography {
     public static byte[] addText(byte[] bImg, byte[] bVal, int offset) {
         try {
             //check of de tekst niet te groot is voor de foto
-            if (bVal.length + 32 > bImg.length) {
+            if (bVal.length + offset > bImg.length) {
                 throw new IllegalArgumentException("Message is too big for this image!");
             }
 
@@ -271,15 +295,10 @@ public class Stenagography {
         byte[] bImg = null;
 
         try {
-            /*ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-             ImageIO.write(img, "BMP", bStream);
-             bImg = bStream.toByteArray();*/
-
             WritableRaster raster = img.getRaster();
             DataBufferByte buffer = (DataBufferByte) raster.getDataBuffer();
 
             return buffer.getData();
-
         } catch (Exception ex) {
             if (console != null) {
                 console.append("Fatal Error (getBytes(BufferedImage)): " + ex.getMessage() + "\n\r");
@@ -347,10 +366,9 @@ public class Stenagography {
         BufferedImage img = null;
 
         /*String[] names = ImageIO.getWriterFormatNames();
-        for (String name : names) {
-            System.out.println(name);
-        }*/
-
+         for (String name : names) {
+         System.out.println(name);
+         }*/
         try {
             InputStream in = new ByteArrayInputStream(arr);
             img = ImageIO.read(in);
@@ -381,22 +399,5 @@ public class Stenagography {
                 }
             }
         }
-    }
-
-    //check which type of file a byte array is
-    //http://stackoverflow.com/questions/10040330/how-to-extract-file-extension-from-byte-array
-    public static String getType(byte[] arr) {
-        String mimeType = "";
-
-        try {
-            InputStream is = new BufferedInputStream(new ByteArrayInputStream(arr));
-            mimeType = URLConnection.guessContentTypeFromStream(is);
-        } catch (Exception ex) {
-            if (console != null) {
-                console.append("Fatal Error (getType(byte[])): " + ex.getMessage() + "\n\r");
-            }
-        }
-
-        return mimeType;
     }
 }
