@@ -38,17 +38,18 @@ public class KeyCalculator {
 
 
         //Array om de keys in op te slaan
-        byte[][] keys = new byte[16][8];
+        //byte[][] keys = new byte[16][8];
+        byte[][] keys = new byte[16][6];
 
         for (int i = 0; i < (iteraties.length - 1); i++) {
             //Voer de benodigde left shifts uit
             C = ByteHelper.rotateLeft(C, 28, iteraties[i]);
             D = ByteHelper.rotateLeft(D, 28, iteraties[i]);
-            
+
             //Voeg C en D terug samen
             byte[] CD = new byte[C.length + D.length];
             System.arraycopy(C, 0, CD, 0, C.length);
-            keys[i] = CD;          
+            keys[i] = ByteHelper.permutate(CD, permutatieTabel2);
         }
         
         return keys;

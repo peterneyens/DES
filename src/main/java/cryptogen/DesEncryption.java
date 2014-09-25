@@ -195,11 +195,10 @@ public class DesEncryption {
             //System.out.println("Iteratie " + i);
 
             // bereken linkse en rechtse blok
-            byte[] subkeyWithoutLastByte = Arrays.copyOfRange(subkeys[i], 0 , 6);
             left = prevRight;
 
             //long millisBeforeXorFeistel = System.nanoTime();
-            right = ByteHelper.xorByteBlocks(prevLeft, new Feistel().executeFunction(prevRight, subkeyWithoutLastByte));//subkeys[i]));
+            right = ByteHelper.xorByteBlocks(prevLeft, new Feistel().executeFunction(prevRight, subkeys[i]));
             //System.out.println("time xor feistel" + (System.nanoTime() - millisBeforeXorFeistel));
 
             // voorbereiding volgende iteratie
@@ -209,8 +208,9 @@ public class DesEncryption {
 
         // laatste (16e) iteratie is verschillend
         //System.out.println("Laatste iteratie");
-        byte[] subkeyWithoutLastByte = Arrays.copyOfRange(subkeys[16 - 1], 0 , 6);
-        left = ByteHelper.xorByteBlocks(prevLeft, new Feistel().executeFunction(prevRight, subkeyWithoutLastByte));//subkeys[16 - 1]));
+
+
+        left = ByteHelper.xorByteBlocks(prevLeft, new Feistel().executeFunction(prevRight, subkeys[16 - 1]));
         right = prevLeft;
 
         //long millis3 = System.nanoTime();
