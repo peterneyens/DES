@@ -81,15 +81,31 @@ public class Feistel {
     public byte[] executeFunction(byte[] block, byte[] subkey) throws Exception {
         
         if (block.length != 4)
-            throw new Exception("Block should be 4 blocks long.");
+            throw new Exception("Block should be 4 bytes long.");
         else if (subkey.length != 6)
-            throw new Exception("Key should be 6 blocks long.");
-        
+            throw new Exception("Key should be 6 bytes long.");
 
-        byte[] transmutedBlock = ByteHelper.permutate(block, Feistel.expansionTabel42Bits);
+        //System.out.println();
+        //System.out.println("subkey");
+        //ByteHelper.printByteArray(subkey);
+
+        byte[] transmutedBlock = ByteHelper.permutFunc(block, Feistel.expansionTabel42Bits);
+        //System.out.println("expanded");
+        //ByteHelper.printByteArray(transmutedBlock);
+
         byte[] xoredBytes = ByteHelper.xorByteBlocks(transmutedBlock, subkey);
-        byte[] result = executeS(xoredBytes);
-        return ByteHelper.permutate(result, Feistel.permutatieTabel32Bits);
+        //System.out.println("xored");
+        //ByteHelper.printByteArray(xoredBytes);
+
+        byte[] result = executeS(xoredBytes);;
+        //System.out.println("result S boxes");
+        //ByteHelper.printByteArray(result);
+
+        byte[] feistelResult = ByteHelper.permutFunc(result, Feistel.permutatieTabel32Bits);
+        //System.out.println("result feistel");
+        //ByteHelper.printByteArray(feistelResult);
+
+        return feistelResult;
     }
 
     private byte[] executeS(byte[] block) {
@@ -137,21 +153,37 @@ public class Feistel {
     
     */
     private byte S(byte block, int[] positions) {
-        
+
+        byte[] blockArray = new byte[]{block};
+
         // neem eesrste en zesde bit en verander naar int
-        int i = Byte.parseByte(
-                (ByteHelper.isBitSet(block, 0) ? "1" : "0") +
-                (ByteHelper.isBitSet(block, 5) ? "1" : "0") , 2);
+        //int i = Byte.parseByte(
+        //        (ByteHelper.isBitSet(block, 0 +2) ? "1" : "0") +
+        //        (ByteHelper.isBitSet(block, 5 +2) ? "1" : "0") , 2);
+
+        int i = Byte.parseByte("" + ByteHelper.getBitInt(blockArray, 2) + ByteHelper.getBitInt(blockArray, 7) , 2);
+
         
         // neem midenste 4 bits en verander naar int
-        int j = Byte.parseByte(
-                (ByteHelper.isBitSet(block, 1) ? "1" : "0") +
-                (ByteHelper.isBitSet(block, 2) ? "1" : "0") +
-                (ByteHelper.isBitSet(block, 3) ? "1" : "0") +
-                (ByteHelper.isBitSet(block, 4) ? "1" : "0") , 2);
+        //int j = Byte.parseByte(
+        //        (ByteHelper.isBitSet(block, 1 +2) ? "1" : "0") +
+        //        (ByteHelper.isBitSet(block, 2 +2) ? "1" : "0") +
+        //        (ByteHelper.isBitSet(block, 3 +2) ? "1" : "0") +
+        //        (ByteHelper.isBitSet(block, 4 +2) ? "1" : "0") , 2);
+
+        int j = Byte.parseByte("" +
+                        ByteHelper.getBitInt(blockArray, 3) +
+                        ByteHelper.getBitInt(blockArray, 4) +
+                        ByteHelper.getBitInt(blockArray, 5) +
+                        ByteHelper.getBitInt(blockArray, 6), 2
+        );
+
+
+        //System.out.println("positions S box " + i + " " + j + " -> " + (i*16+j));
         
-        return (byte)positions[(i*8) + j];
-        
+        //return (byte)positions[(i*8) + j];
+        return (byte)positions[(i*16) + j]; // ???
+
     }
 
 }

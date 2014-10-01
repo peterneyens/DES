@@ -205,7 +205,6 @@ public class CryptoGen extends JFrame implements ActionListener {
             
             txtConsole.append("Decoding finished!" + "\n\r");
         } else if (e.getSource() == btnDesStart) {
-            System.out.println("Start encrypting file");
             txtConsole.append("Encrypting started!" + "\n\r");
             long before = System.currentTimeMillis();
             DesEncryption.encryptFile(txtDesFile.getText(), txtDesKey.getText());

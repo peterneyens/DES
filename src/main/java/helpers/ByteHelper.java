@@ -5,6 +5,9 @@
  */
 package helpers;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+
 /**
  *
  * @author arno
@@ -41,6 +44,17 @@ public class ByteHelper {
         return newBlock;
     }
 
+    // http://n3vrax.wordpress.com/2011/07/23/des-algorithm-java-implementation/
+    public static byte[] permutFunc(byte[] input, int[] table) {
+        int nrBytes = (table.length - 1) / 8 + 1;
+        byte[] out = new byte[nrBytes];
+        for (int i = 0; i < table.length; i++) {
+            int val = getBitInt(input, table[i] - 1);
+            setBit(out, i, val);
+        }
+        return out;
+    }
+
     // Kijkt of een bepaalde bit in een byte array gelijk aan 1 is
     public static byte getBit(byte[] data, int pos) {
         int posByte = pos / 8;
@@ -60,6 +74,7 @@ public class ByteHelper {
         return (value & (1 << bit)) != 0;
     }
 
+
     // Voert XOR uit op twee byte arrays
     // Arrays moeten van de zelfde lengte zijn
     public static byte[] xorByteBlocks(byte[] blockOne, byte[] blockTwo) {
@@ -78,24 +93,24 @@ public class ByteHelper {
         int numOfBytes = (len - 1) / 8 + 1;
         byte[] out = new byte[numOfBytes];
         for (int i = 0; i < len; i++) {
-            int val = getBit(in, (i + step) % len);
+            int val = getBitInt(in, (i + step) % len);
             setBit(out, i, val);
         }
         return out;
     }
 
-    /*
+
     //nick: Arno heeft hier een functie voor weet niet zeker of zelfde resultaat, later testen.
     // Haalt de bit op op positie pos in de byte array data
     // Source: http://www.herongyang.com/Java/Bit-String-Get-Bit-from-Byte-Array.html
-    private static int getBit(byte[] data, int pos) {
+    public static int getBitInt(byte[] data, int pos) {
         int posByte = pos / 8;
         int posBit = pos % 8;
         byte valByte = data[posByte];
         int valInt = valByte >> (8 - (posBit + 1)) & 0x0001;
         return valInt;
     }
-    */
+
     
     //nick: misschien deze functie zelf uitschrijven, deze komt rechstreeks van de site.
     // Stelt de bit op op positie pos in de byte array data
@@ -107,5 +122,23 @@ public class ByteHelper {
         oldByte = (byte) (((0xFF7F >> posBit) & oldByte) & 0x00FF);
         byte newByte = (byte) ((val << (8 - (posBit + 1))) | oldByte);
         data[posByte] = newByte;
+    }
+
+    // http://stackoverflow.com/a/6393904
+    public static void printByteArray(byte[] bytes) {
+        for (byte b : bytes) {
+            System.out.print(Integer.toBinaryString(b & 255 | 256).substring(1) + " ");
+        }
+        System.out.println();
+    }
+
+    public static byte[] convertBinaryStringToByteArray(String binaryString) {
+        byte[] bytes = new BigInteger(binaryString, 2).toByteArray();
+
+        // als eerste bit == 1 wordt een extra byte met allemaal nullen toegevoegd
+        if (binaryString.charAt(0) == '1') {
+            return Arrays.copyOfRange(bytes, 1, bytes.length);
+        }
+        return bytes;
     }
 }
