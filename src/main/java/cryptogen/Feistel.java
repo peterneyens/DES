@@ -144,6 +144,7 @@ public class Feistel {
         return ByteHelper.permutate(result, Feistel.permutatieTabel32Bits);
     }
 
+//    source: http://www.herongyang.com/Cryptography/DES-Java-Implementation-Program.html
     private static byte[] substitution6x4(byte[] in) {
         in = splitBytes(in, 6); // Splitting byte[] into 6-bit blocks
         byte[] out = new byte[in.length / 2];
@@ -161,7 +162,8 @@ public class Feistel {
         }
         return out;
     }
-
+    
+//    source: http://www.herongyang.com/Cryptography/DES-Java-Implementation-Program.html
     private static byte[] splitBytes(byte[] in, int len) {
         int numOfBytes = (8 * in.length - 1) / len + 1;
         byte[] out = new byte[numOfBytes];
@@ -180,7 +182,7 @@ public class Feistel {
         byte[] resultBlock = new byte[4];
 
         int count = 0,
-                byteIndex = 0;
+            byteIndex = 0;
 
         ByteArrayBitIterable bitStream = new ByteArrayBitIterable(block);
 

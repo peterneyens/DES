@@ -14,6 +14,33 @@ import static java.lang.System.out;
  * @author arno
  */
 public class ByteHelper {
+    
+    public static byte[] concatenateBits(byte[] a, int aLen, byte[] b, int bLen) {
+        int numOfBytes = (aLen + bLen - 1) / 8 + 1;
+        byte[] out = new byte[numOfBytes];
+        int j = 0;
+        for (int i = 0; i < aLen; i++) {
+            int val = ByteHelper.getBit(a, i);
+            ByteHelper.setBit(out, j, val);
+            j++;
+        }
+        for (int i = 0; i < bLen; i++) {
+            int val = ByteHelper.getBit(b, i);
+            ByteHelper.setBit(out, j, val);
+            j++;
+        }
+        return out;
+    }
+
+    public static byte[] selectBits(byte[] in, int pos, int len) {
+        int numOfBytes = (len - 1) / 8 + 1;
+        byte[] out = new byte[numOfBytes];
+        for (int i = 0; i < len; i++) {
+            int val = ByteHelper.getBit(in, pos + i);
+            ByteHelper.setBit(out, i, val);
+        }
+        return out;
+    }
 
     public static byte[] fileToBytes(String file) throws Exception {
         FileInputStream inputStream = new FileInputStream(file);
@@ -56,7 +83,6 @@ public class ByteHelper {
         return out;
     }
 
-    
     // Kijkt of een bepaalde bit in een byte array gelijk aan 1 is
     public static int getBit(byte[] data, int pos) {
         int posByte = pos / 8;
@@ -125,6 +151,5 @@ public class ByteHelper {
         byte newByte = (byte) ((val << (8 - (posBit + 1))) | oldByte);
         data[posByte] = newByte;
     }
-
 
 }

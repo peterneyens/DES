@@ -225,8 +225,8 @@ public class CryptoGen extends JFrame implements ActionListener {
             txtConsole.append("Time encrypting in milliseconds " + (after - before));
         } else if (e.getSource() == btnDesDecode) {
             if(txtDesFile.getText().indexOf(".des") == -1) {
-//                JOptionPane.showMessageDialog(null, "Als je gaat decrypteren moet je een .des file kiezen.", "Fout formaat", JOptionPane.INFORMATION_MESSAGE);
-//                return;
+                JOptionPane.showMessageDialog(null, "Als je gaat decrypteren moet je een .des file kiezen.", "Fout formaat", JOptionPane.INFORMATION_MESSAGE);
+                return;
             }
             System.out.println("Start dencrypting file");
             txtConsole.append("Decryption started!" + "\n\r");

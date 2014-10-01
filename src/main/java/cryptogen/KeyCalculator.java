@@ -11,7 +11,6 @@ import java.util.Arrays;
 public class KeyCalculator {
 
     //permutatie tabellen
-
     public static int[] permutatieTabel1 = new int[]{
         57, 49, 41, 33, 25, 17, 9,
         1, 58, 50, 42, 34, 26, 18,
@@ -37,64 +36,32 @@ public class KeyCalculator {
 
     // maakt de keys aan
     public static byte[][] Generate(byte[] sourceCD) {
-        
+
         // Voer permutatie matrix uit
         byte[] permutatedBlock = ByteHelper.permutate(sourceCD, permutatieTabel1);
-        
-        // Splits de source array in twee tabellen (C, D)
-        byte[] C = KeyCalculator.selectBits(permutatedBlock, 0, 28);
-        byte[] D = KeyCalculator.selectBits(permutatedBlock, 28, 28);
 
-        System.out.println("permutatedBlock nb bytes " + permutatedBlock.length); // 7 bytes
-        System.out.println("C nb bytes " + C.length); // now 7 / 2 - 1   => 3 - 1 = 2    ==> 2 bytes
-        System.out.println("D nb bytes " + D.length); // 4 bytes
+        // Splits de source array in twee tabellen (C, D)
+        byte[] C = ByteHelper.selectBits(permutatedBlock, 0, 28);
+        byte[] D = ByteHelper.selectBits(permutatedBlock, 28, 28);
 
         //Array om de keys in op te slaan
         byte[][] keys = new byte[16][6];
 
         for (int i = 0; i < iteraties.length; i++) {
-//            ByteHelper.printBytesAsBits(C);
-//            ByteHelper.printBytesAsBits(D);
+//             ByteHelper.printBytesAsBits(C);
+//             ByteHelper.printBytesAsBits(D);
 
             //Voer de benodigde left shifts uit
             C = ByteHelper.rotateLeft(C, 28, iteraties[i]);
             D = ByteHelper.rotateLeft(D, 28, iteraties[i]);
 
             //Voeg C en D terug samen
-//            byte[] CD = new byte[C.length + D.length];
-//            System.arraycopy(C, 0, CD, 0, C.length);
-//            System.arraycopy(D, 0, CD, D.length, D.length);
-             byte[] CD = concatenateBits(C,28,D,28);
+            byte[] CD = ByteHelper.concatenateBits(C, 28, D, 28);
             keys[i] = ByteHelper.permutate(CD, permutatieTabel2);
         }
 
         return keys;
     }
 
-    public static byte[] selectBits(byte[] in, int pos, int len) {
-        int numOfBytes = (len - 1) / 8 + 1;
-        byte[] out = new byte[numOfBytes];
-        for (int i = 0; i < len; i++) {
-            int val = ByteHelper.getBit(in, pos + i);
-            ByteHelper.setBit(out, i, val);
-        }
-        return out;
-    }
-    
-    private static byte[] concatenateBits(byte[] a, int aLen, byte[] b, int bLen) {
-      int numOfBytes = (aLen+bLen-1)/8 + 1;
-      byte[] out = new byte[numOfBytes];
-      int j = 0;
-      for (int i=0; i<aLen; i++) {
-         int val = ByteHelper.getBit(a,i);
-         ByteHelper.setBit(out,j,val);
-         j++;
-      }
-      for (int i=0; i<bLen; i++) {
-         int val = ByteHelper.getBit(b,i);
-         ByteHelper.setBit(out,j,val);
-         j++;
-      }
-      return out;
-   }
+  
 }

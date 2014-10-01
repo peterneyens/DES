@@ -69,8 +69,8 @@ public class DesEncryption {
 
         try {
 
-            byte[][] subkeysOld = KeyCalculator.Generate(keyInBytes);
-            byte[][] subkeys = External.getSubkeys(keyInBytes);
+            byte[][] subkeys = KeyCalculator.Generate(keyInBytes);
+//            byte[][] subkeys = External.getSubkeys(keyInBytes);
             System.out.println("Subkeys gegenereerd");
 
             String outputPath;
@@ -91,7 +91,6 @@ public class DesEncryption {
                 paddingSize = 8 - remainingBytes;
 
                 outputBytes = new byte[inputBytes.length + paddingSize];
-//                outputBytes = new byte[inputBytes.length];
             } else {
                 outputBytes = new byte[inputBytes.length];
             }
