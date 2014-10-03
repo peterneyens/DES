@@ -36,7 +36,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class CryptoGen extends JFrame implements ActionListener {
 
     private JTextField txtDesFile, txtDesKey, txtStenagoImage;
-    private JButton btnDesStart, btnDesFile, btnStenagoEncode, btnStenagoDecode, btnStenagoImage;
+    private JButton btnDesEncode, btnDesDecode, btnDesFile,
+                    btnStenagoEncode, btnStenagoDecode, btnStenagoImage;
     private JTextArea txtStenagoText, txtConsole;
 
     public CryptoGen() {
@@ -81,11 +82,16 @@ public class CryptoGen extends JFrame implements ActionListener {
         btnDesFile = new JButton("Select File");
         btnDesFile.addActionListener(this);
         pDes.add(btnDesFile, gbc);
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        btnDesDecode = new JButton("Start Decryption");
+        btnDesDecode.addActionListener(this);
+        pDes.add(btnDesDecode, gbc);
         gbc.gridx = 2;
         gbc.gridy = 3;
-        btnDesStart = new JButton("Start Encryption");
-        btnDesStart.addActionListener(this);
-        pDes.add(btnDesStart, gbc);
+        btnDesEncode = new JButton("Start Encryption");
+        btnDesEncode.addActionListener(this);
+        pDes.add(btnDesEncode, gbc);
 
         //des paneel toevoegen aan frame
         pMain.add(pDes, BorderLayout.WEST);
@@ -204,12 +210,18 @@ public class CryptoGen extends JFrame implements ActionListener {
             txtStenagoText.setText(str);
             
             txtConsole.append("Decoding finished!" + "\n\r");
-        } else if (e.getSource() == btnDesStart) {
+        } else if (e.getSource() == btnDesEncode) {
             txtConsole.append("Encrypting started!" + "\n\r");
             long before = System.currentTimeMillis();
             DesEncryption.encryptFile(txtDesFile.getText(), txtDesKey.getText());
             long after = System.currentTimeMillis();
-            txtConsole.append("Time encrypting in milliseconds " + (after - before));
+            txtConsole.append("Time encrypting in milliseconds " + (after - before) + "\n\r");
+        } else if (e.getSource() == btnDesDecode) {
+            txtConsole.append("Decrypting started!" + "\n\r");
+            long before = System.currentTimeMillis();
+            DesEncryption.decryptFile(txtDesFile.getText(), txtDesKey.getText());
+            long after = System.currentTimeMillis();
+            txtConsole.append("Time decrypting in milliseconds " + (after - before) + "\n\r");
         }
 
     }
