@@ -142,11 +142,11 @@ public class Feistel {
             // get bit value
             byte bit = (isBitSet) ? (byte) 1 : (byte) 0;
 
-            if (count % 6 == 0 && count != 0) // count starts at 0, so byteIndex was incremented to 1 directly
-                byteIndex++;
-
             helperBlock[byteIndex] = (byte) ((helperBlock[byteIndex] << 1) | bit);
+
             count++;
+            if (count % 6 == 0)
+                byteIndex++;
         }
 
         // execute S function on each byte
@@ -172,32 +172,31 @@ public class Feistel {
     */
     private byte S(byte block, int[] positions) {
 
-        byte[] blockArray = new byte[]{block};
+        //byte[] blockArray = new byte[]{block};
 
         // neem eesrste en zesde bit en verander naar int
-        //int i = Byte.parseByte(
-        //        (ByteHelper.isBitSet(block, 0 +2) ? "1" : "0") +
-        //        (ByteHelper.isBitSet(block, 5 +2) ? "1" : "0") , 2);
+        //int i = Byte.parseByte("" + ByteHelper.getBitInt(blockArray, 2) + ByteHelper.getBitInt(blockArray, 7) , 2);
 
-        int i = Byte.parseByte("" + ByteHelper.getBitInt(blockArray, 2) + ByteHelper.getBitInt(blockArray, 7) , 2);
+        // verplaats de 6e bit naar de 2e bit en maak de 1e bit 0
+        // tel de eerste bit hierbij op
+        int externalTwo = ((block >> 4) & ~1) + (block & 1);
+        int i = externalTwo;
 
-        
-        // neem midenste 4 bits en verander naar int
-        //int j = Byte.parseByte(
-        //        (ByteHelper.isBitSet(block, 1 +2) ? "1" : "0") +
-        //        (ByteHelper.isBitSet(block, 2 +2) ? "1" : "0") +
-        //        (ByteHelper.isBitSet(block, 3 +2) ? "1" : "0") +
-        //        (ByteHelper.isBitSet(block, 4 +2) ? "1" : "0") , 2);
-
+        // neem de middelste 4 bits en verander naar int
+        /*
         int j = Byte.parseByte("" +
                         ByteHelper.getBitInt(blockArray, 3) +
                         ByteHelper.getBitInt(blockArray, 4) +
                         ByteHelper.getBitInt(blockArray, 5) +
                         ByteHelper.getBitInt(blockArray, 6), 2
         );
+        */
 
-        return (byte)positions[(i*16) + j]; // ???
+        // maak de "grootste" bits 0 en verlaats een positie naar rechts
+        byte middleFour = (byte) ((block & ~(7 << 5)) >> 1);
+        int j = middleFour;
 
+        return (byte)positions[(i*16) + j];
     }
 
 }
