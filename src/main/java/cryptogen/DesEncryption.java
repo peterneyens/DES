@@ -3,13 +3,11 @@ package cryptogen;
 import helpers.ByteHelper;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.stream.IntStream;
 
 /**
  * Created by peter on 22/09/14.
@@ -41,16 +39,8 @@ public class DesEncryption {
     };
 
     public static void encryptFile(String filePath, String key) {
-        // eerste 64 bits van key omgezet in bytes
-        byte[] keyInBytes = Arrays.copyOfRange(key.getBytes(Charset.forName("UTF-8")), 0, 8);
-        //System.out.println("key in bytes : " + keyInBytes);
-
-        // TODO key checking
-        // 8th bit now not used, -> pariteitsbit (bytes hebben oneven aantal 1)
-        // TODO check keyInBytes niet 00000000 of 111111111, of subkeys vaak gelijk, ...
-        byte[][] subKeys = new KeyCalculator().Generate(keyInBytes);
-
-        byte[][] reversedSubKeys = reverseArray(subKeys);
+        final byte[][] subKeys = new KeyCalculator().generate(key);
+        final byte[][] reversedSubKeys = reverseSubKeys(subKeys);
 
         long before = System.nanoTime();
         encryptFile(filePath, subKeys);
@@ -61,69 +51,48 @@ public class DesEncryption {
         long afterAsync = System.nanoTime();
 
         System.out.println("Sync " + (afterSync - before) + " Async " + (afterAsync - afterSync));
-
-        //for(byte[] bytes : subKeys) { ByteHelper.printByteArray(bytes); }
-        //System.out.println();
-
-        //byte[][] reversedSubKeys = reverseArray(subKeys);
-
-        //for(byte[] bytes : reversedSubKeys) { printByteArray(bytes); }
-        //System.out.println();
-
-        //decryptFile(filePath + ".des", reversedSubKeys);
-        //decryptFile(filePath + ".des2", reversedSubKeys);
     }
 
+    public static void decryptFile(String filePath, String key) {
+        byte[][] subKeys = new KeyCalculator().generate(key);
+        byte[][] reversedSubKeys = reverseSubKeys(subKeys);
+
+        decryptFileAsync(filePath, reversedSubKeys);
+    }
+
+
     private static void encryptFile(String filePath, byte[][] subKeys) {
+        System.out.println();
+        System.out.println("Encrypting");
 
         try {
-            File inputFile = new File(filePath);
-            File outputFile = new File(filePath + ".des");
-            if(! outputFile.exists()) {
-                outputFile.createNewFile();
-            }
+            final File inputFile = new File(filePath);
+            final File outputFile = new File(filePath + ".des");
+            final InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
+            final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 
-            InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
-            OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
+            final long nbBytesFile = inputFile.length();
+            final long nbTotalBlocks = (long) Math.ceil(nbBytesFile / (double) blockSizeInBytes);
+            final int nbBytesPaddingNeeded = (int) (blockSizeInBytes - (nbBytesFile % blockSizeInBytes));
 
-            long nbBytesFile = inputFile.length();
-            long nbTotalBlocks = (long) Math.ceil(nbBytesFile / (double) blockSizeInBytes);
-            int nbBytesPaddingNeeded = (int) (blockSizeInBytes - (nbBytesFile % blockSizeInBytes));
-
-            byte header = (byte) nbBytesPaddingNeeded;
-            System.out.println("header " + header);
+            final byte header = (byte) nbBytesPaddingNeeded;
             outputStream.write(header);
 
-            //int nbBlocks = 0;
             byte[] block = new byte[blockSizeInBytes];
             int bytesRead = 0;
-            //while ((bytesRead = inputStream.read(block)) >= 0) {
-            for (int nbBlocks = 1; nbBlocks <= nbTotalBlocks; nbBlocks++) {
+
+            for (long nbBlocks = 1; nbBlocks <= nbTotalBlocks; nbBlocks++) {
 
                 bytesRead = inputStream.read(block);
-                if (bytesRead != blockSizeInBytes) {
-                    System.out.println("Did not read a full block");
-                    System.out.println("Bytes in block: " + block.length);
-                    // TODO ??
-                }
 
-
-                //nbBlocks++;
                 System.out.println("Encrypting block " + nbBlocks);
                 byte[] encryptedBlock = encryptBlock(block, subKeys);
-
-                ByteHelper.printByteArray(block);
-                ByteHelper.printByteArray(encryptedBlock);
 
                 // schrijf geencrypteerd blok weg naar output bestand
                 outputStream.write(encryptedBlock);
 
-                // remove later
                 block = new byte[blockSizeInBytes];
             }
-
-            System.out.println("nbTotalBlocks " + nbTotalBlocks);
-            System.out.println("nbBytesPaddingNeeded " + nbBytesPaddingNeeded);
 
             inputStream.close();
             outputStream.close();
@@ -137,57 +106,39 @@ public class DesEncryption {
     }
 
     private static void decryptFile(String filePath, byte[][] reversedSubKeys) {
-
         System.out.println();
         System.out.println("Decrypting");
 
         try {
-            File inputFile = new File(filePath);
-            File outputFile = new File(filePath.replace(".des",".decrypted"));
-            if(! outputFile.exists()) {
-                outputFile.createNewFile();
-            }
+            final File inputFile = new File(filePath);
+            final File outputFile = new File(filePath.replace(".des",".decrypted"));
+            final InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
+            final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 
-            InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
-            OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
-
-            long nbBytesFileWithoutHeader = inputFile.length() - 1;
-            long nbTotalBlocks = (long) Math.ceil(nbBytesFileWithoutHeader / (double) blockSizeInBytes);
-
-            int nbBytesHeading = inputStream.read();
-            System.out.println("padding " + nbBytesHeading);
+            final long nbBytesFileWithoutHeader = inputFile.length() - 1;
+            final long nbTotalBlocks = (long) Math.ceil(nbBytesFileWithoutHeader / (double) blockSizeInBytes);
+            final int nbBytesHeading = inputStream.read();
 
             byte[] block = new byte[blockSizeInBytes];
             int bytesRead = 0;
-            for (int nbBlocks = 1; nbBlocks <= nbTotalBlocks; nbBlocks++) {
+            for (long nbBlocks = 1; nbBlocks <= nbTotalBlocks; nbBlocks++) {
 
                 bytesRead = inputStream.read(block);
-                if (bytesRead != blockSizeInBytes) {
-                    System.out.println("Did not read a full block");
-                    System.out.println("Bytes in block: " + bytesRead);
-                    // TODO ??
-                }
 
                 System.out.println("Decrypting block " + nbBlocks);
                 byte[] decryptedBlock = decryptBlock(block, reversedSubKeys);
-
-                ByteHelper.printByteArray(block);
 
                 // schrijf geencrypteerd blok weg naar output bestand
                 // laatste blok => verwijder padding
                 if (nbBlocks == nbTotalBlocks) {
                     byte[] blockWithoutPadding = Arrays.copyOfRange(decryptedBlock, 0, blockSizeInBytes - nbBytesHeading);
                     outputStream.write(blockWithoutPadding);
-                    ByteHelper.printByteArray(blockWithoutPadding);
                 } else {
                     outputStream.write(decryptedBlock);
-                    ByteHelper.printByteArray(decryptedBlock);
                 }
 
-                // remove later
                 block = new byte[blockSizeInBytes];
             }
-
 
             inputStream.close();
             outputStream.close();
@@ -201,26 +152,23 @@ public class DesEncryption {
     }
 
     private static void encryptFileAsync(String filePath, byte[][] subKeys) {
+        System.out.println();
+        System.out.println("Encrypting Async");
 
         try {
-            File inputFile = new File(filePath);
-            File outputFile = new File(filePath + ".des2");
-            if (!outputFile.exists()) {
-                outputFile.createNewFile();
-            }
+            final File inputFile = new File(filePath);
+            final File outputFile = new File(filePath + ".des2");
+            final InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
+            final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 
-            InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
-            OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
+            final List<Future<byte[]>> futures = new ArrayList<>();
+            final ExecutorService executor = Executors.newFixedThreadPool(4);
 
-            List<Future<byte[]>> futures = new ArrayList<>();
-            ExecutorService executor = Executors.newFixedThreadPool(4);
+            final long nbBytesFile = inputFile.length();
+            final long nbTotalBlocks = (long) Math.ceil(nbBytesFile / (double) blockSizeInBytes);
+            final int nbBytesPaddingNeeded = (int) (blockSizeInBytes - (nbBytesFile % blockSizeInBytes));
 
-            long nbBytesFile = inputFile.length();
-            long nbTotalBlocks = (long) Math.ceil(nbBytesFile / (double) blockSizeInBytes);
-            int nbBytesPaddingNeeded = (int) (blockSizeInBytes - (nbBytesFile % blockSizeInBytes));
-
-            byte header = (byte) nbBytesPaddingNeeded;
-            System.out.println("header " + header);
+            final byte header = (byte) nbBytesPaddingNeeded;
             outputStream.write(header);
 
             long before = System.nanoTime();
@@ -230,28 +178,19 @@ public class DesEncryption {
             for (int nbBlocks = 1; nbBlocks <= nbTotalBlocks; nbBlocks++) {
 
                 bytesRead = inputStream.read(block);
-                if (bytesRead != blockSizeInBytes) {
-                    System.out.println("Did not read a full block");
-                    System.out.println("Bytes in block: " + block.length);
-                    // TODO ??
-                }
 
                 final byte[] finalBlock = block;
                 System.out.println("Encrypting block async " + nbBlocks);
                 futures.add(CompletableFuture.supplyAsync(() -> {
-                    try {
-                        return encryptBlock(finalBlock, subKeys);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return finalBlock; // hack
-                    }
+                    return encryptBlock(finalBlock, subKeys);
                 }, executor).exceptionally(ex -> {
                     throw (RuntimeException) ex;
                 }));
 
-                // remove later
                 block = new byte[blockSizeInBytes];
             }
+            inputStream.close();
+
             System.out.println("Done setting tasks");
             long afterTasks = System.nanoTime();
 
@@ -263,71 +202,54 @@ public class DesEncryption {
                     throw new RuntimeException(e);
                 }
             });
-            long afterWriting = System.nanoTime();
 
+            long afterWriting = System.nanoTime();
             System.out.println("Done writing to file");
 
             System.out.println("Setting tasks " + (afterTasks - before) + " Writing " + (afterWriting - afterTasks));
 
-            inputStream.close();
             outputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
     private static void decryptFileAsync(String filePath, byte[][] reversedSubKeys) {
-
         System.out.println();
-        System.out.println("Decrypting");
+        System.out.println("Decrypting Async");
 
         try {
-            File inputFile = new File(filePath);
-            File outputFile = new File(filePath.replace(".des2",".decryptedasync"));
-            if(! outputFile.exists()) {
-                outputFile.createNewFile();
-            }
+            final File inputFile = new File(filePath);
+            final File outputFile = new File(filePath.replace(".des2",".decryptedasync"));
+            final InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
+            final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 
-            InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
-            OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
+            final List<Future<byte[]>> futures = new ArrayList<>();
+            final ExecutorService executor = Executors.newFixedThreadPool(4);
 
-            List<Future<byte[]>> futures = new ArrayList<>();
-            ExecutorService executor = Executors.newFixedThreadPool(4);
+            final long nbBytesFileWithoutHeader = inputFile.length() - 1;
+            final long nbTotalBlocks = (long) Math.ceil(nbBytesFileWithoutHeader / (double) blockSizeInBytes);
 
-            long nbBytesFileWithoutHeader = inputFile.length() - 1;
-            long nbTotalBlocks = (long) Math.ceil(nbBytesFileWithoutHeader / (double) blockSizeInBytes);
-
-            int nbBytesHeading = inputStream.read();
-            System.out.println("padding " + nbBytesHeading);
+            final int nbBytesPadding = inputStream.read();
+            System.out.println("padding " + nbBytesPadding);
 
             byte[] block = new byte[blockSizeInBytes];
             int bytesRead = 0;
             for (int nbBlocks = 1; nbBlocks <= nbTotalBlocks; nbBlocks++) {
 
                 bytesRead = inputStream.read(block);
-                if (bytesRead != blockSizeInBytes) {
-                    System.out.println("Did not read a full block");
-                    System.out.println("Bytes in block: " + block.length);
-                    // TODO ??
-                }
 
                 final byte[] finalBlock = block;
-                System.out.println("Encrypting block async " + nbBlocks);
+                System.out.println("Decrypting block async " + nbBlocks);
                 futures.add(CompletableFuture.supplyAsync(() -> {
-                    try {
-                        return decryptBlock(finalBlock, reversedSubKeys);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return finalBlock; // hack
-                    }
+                    return decryptBlock(finalBlock, reversedSubKeys);
                 }, executor).exceptionally(ex -> {
                     throw (RuntimeException) ex;
                 }));
 
-                // remove later
                 block = new byte[blockSizeInBytes];
             }
+            inputStream.close();
 
             //futures.stream().forEachOrdered(encryptedBlock -> {
             //});
@@ -335,17 +257,13 @@ public class DesEncryption {
             for (int i = 1; i <= nbTotalBlocks; i++) {
                 byte[] decryptedBlock = futures.get(i-1).get();
                 if  (i == nbTotalBlocks) {
-                    decryptedBlock = Arrays.copyOfRange(decryptedBlock, 0, blockSizeInBytes - nbBytesHeading);
+                    decryptedBlock = Arrays.copyOfRange(decryptedBlock, 0, blockSizeInBytes - nbBytesPadding);
                 }
-                try {
-                    outputStream.write(decryptedBlock);
-                    System.out.println("Blok weggeschreven");
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+
+                outputStream.write(decryptedBlock);
+                System.out.println("Blok " + i +" weggeschreven");
             }
 
-            inputStream.close();
             outputStream.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -356,18 +274,12 @@ public class DesEncryption {
         }
     }
 
-
-
-    public static byte[] encryptBlock(byte[] block, byte[][] subkeys) throws Exception {
-        // check of blok grootte juist, maar wat met laatste blok ???
-
+    public static byte[] encryptBlock(byte[] block, byte[][] subKeys) throws IllegalArgumentException {
         if (block.length != 8)
-            System.out.println("Block not 8 length");
+            throw new IllegalArgumentException("Block not 8 length");
 
         //long millis1 = System.nanoTime();
-
         byte[] permutatedBlock = ByteHelper.permutFunc(block, initialPermutation);
-
         //long millis2 = System.nanoTime();
         //System.out.println("Time permutation " + (millis2 - millis1));
 
@@ -387,8 +299,8 @@ public class DesEncryption {
             left = prevRight;
 
             //long millisBeforeXorFeistel = System.nanoTime();
-            right = ByteHelper.xorByteBlocks(prevLeft, new Feistel().executeFunction(prevRight, subkeys[i-1]));
-            //System.out.println("time xor feistel" + (System.nanoTime() - millisBeforeXorFeistel));
+            right = ByteHelper.xorByteBlocks(prevLeft, new Feistel().executeFunction(prevRight, subKeys[i-1]));
+            //System.out.println("time xor feistel " + (System.nanoTime() - millisBeforeXorFeistel));
 
             //System.out.println();
             //System.out.println("Iteratie " + i);
@@ -408,21 +320,38 @@ public class DesEncryption {
         //long millis3 = System.nanoTime();
         //System.out.println("Time iterations " + (millis3 - millis2));
 
-        System.out.println("Blok geencrypteerd");
         return ByteHelper.permutFunc(concatBlocks(left, right), inverseInitialPermutation);
 
     }
 
-    // subkeys need to be reversed (vs encryptBlock)
-    public static byte[] decryptBlock(byte[] block, byte[][] subKeys) throws Exception {
-        return encryptBlock(block, subKeys);
+    public static byte[] decryptBlock(byte[] block, byte[][] reversedSubKeys) throws IllegalArgumentException {
+        return encryptBlock(block, reversedSubKeys);
     }
 
-    private static <T> T[] reverseArray(T[] array) {
+    // based on http://stackoverflow.com/a/17534234
+    private static byte[][] reverseSubKeys(byte[][] subKeys) {
+        byte[][] reversedSubKeys = new byte[subKeys.length][];
+        for (int i = 0; i < subKeys.length; i++) {
+            reversedSubKeys[i] = Arrays.copyOf(subKeys[subKeys.length - 1 - i], subKeys[subKeys.length - 1 - i].length);
+        }
+        return reversedSubKeys;
+    }
+
+    /*private static <T> T[] reverseArray(T[] array) {
         // reverse array (reversing list reverses array <-- http://stackoverflow.com/a/12893811)
         Collections.reverse(Arrays.asList(array));
         return array;
-    }
+    }*/
+
+    // based on http://stackoverflow.com/a/12678906
+    /*private static <T> T[] reverseArray(T[] array) {
+        for (int i = 0; i < array.length / 2; i++) {
+            T temp = array[i];
+            array[i] = array[array.length - 1 - i];
+            array[array.length - 1 - i] = temp;
+        }
+        return array;
+    }*/
 
     // based on http://stackoverflow.com/a/784842
     private static byte[] concatBlocks(byte[] left, byte[] right) {

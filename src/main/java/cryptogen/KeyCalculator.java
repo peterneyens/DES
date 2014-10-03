@@ -2,6 +2,7 @@ package cryptogen;
 
 import helpers.ByteHelper;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
@@ -36,8 +37,15 @@ public class KeyCalculator {
     //aantal iteraties
     public static int[] iteraties = new int[]{1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
 
+
+    public byte[][] generate(String key) {
+        // eerste 64 bits van string worden omgezet in bytes
+        byte[] keyInBytes = Arrays.copyOfRange(key.getBytes(Charset.forName("UTF-8")), 0, 8);
+        return generate(keyInBytes);
+    }
+
     // maakt de keys aan
-    public byte[][] Generate(byte[] sourceCD) {
+    public byte[][] generate(byte[] sourceCD) {
 
         //System.out.println("Key (CD)");
         //ByteHelper.printByteArray(sourceCD);
@@ -81,7 +89,9 @@ public class KeyCalculator {
 
             keys[i] = ByteHelper.permutFunc(CD, permutatieTabel2);
         }
-        
+
+        // TODO check keyInBytes niet 00000000 of 111111111, of subkeys vaak gelijk, ...
+
         return keys;
     }
 }

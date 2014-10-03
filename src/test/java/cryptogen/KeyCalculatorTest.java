@@ -3,11 +3,7 @@ package cryptogen;
 import helpers.ByteHelper;
 import org.junit.*;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -82,7 +78,7 @@ public class KeyCalculatorTest {
             expectedSubKeys[i] = ByteHelper.convertBinaryStringToByteArray(expectedSubKeysStrings[i].replace(" ", ""));
         }
 
-        byte[][] subKeys = new KeyCalculator().Generate(key);
+        byte[][] subKeys = new KeyCalculator().generate(key);
 
         Arrays.stream(expectedSubKeys).forEach((bytes) -> ByteHelper.printByteArray(bytes));
         System.out.println();
