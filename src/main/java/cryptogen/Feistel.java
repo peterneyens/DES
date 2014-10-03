@@ -14,7 +14,16 @@ import helpers.ByteHelper;
  */
 public class Feistel {
     
-    public static int[] expansionTabel42Bits = new int[]{32, 1, 2, 3, 4, 5, 4, 5, 6, 7, 8, 9, 8, 9, 10, 11, 12, 13, 12, 13, 14, 15, 16, 17, 16, 17, 18, 19, 20, 21, 20, 21, 22, 23, 24, 25, 24, 25, 26, 27, 28, 29, 28, 29, 30, 31, 32, 1};
+    public static int[] expansionTabel42Bits = new int[]{
+        32, 1, 2, 3, 4, 5,
+        4, 5, 6,  7, 8, 9,
+        8, 9, 10, 11, 12, 13,
+        12, 13, 14, 15, 16, 17,
+        16, 17, 18, 19, 20, 21,
+        20, 21, 22, 23, 24, 25,
+        24, 25, 26, 27, 28, 29,
+        28, 29, 30, 31, 32, 1
+    };
 
     // gebruikt door S functie
     public static final int[][] s = {
@@ -67,7 +76,16 @@ public class Feistel {
         2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11
     }};
     
-    public static int[] permutatieTabel32Bits = new int[]{16, 7, 20, 21, 29, 12, 28, 17, 1, 15, 23, 26, 5, 18, 31, 10, 2, 8, 24, 14, 32, 27, 3, 9, 19, 13, 30, 6, 22, 11, 4, 25};
+    public static int[] permutatieTabel32Bits = new int[]{
+        16, 7, 20, 21,
+        29, 12, 28, 17,
+        1, 15, 23, 26,
+        5, 18, 31, 10,
+        2, 8, 24, 14,
+        32, 27, 3, 9,
+        19, 13, 30, 6,
+        22, 11, 4, 25
+    };
     
     /* 
     
@@ -78,12 +96,12 @@ public class Feistel {
     subkey - 48bits - 6bytes
     
     */
-    public byte[] executeFunction(byte[] block, byte[] subkey) throws Exception {
+    public byte[] executeFunction(byte[] block, byte[] subkey) throws IllegalArgumentException {
         
         if (block.length != 4)
-            throw new Exception("Block should be 4 bytes long.");
+            throw new IllegalArgumentException("Block should be 4 bytes long.");
         else if (subkey.length != 6)
-            throw new Exception("Key should be 6 bytes long.");
+            throw new IllegalArgumentException("Key should be 6 bytes long.");
 
         //System.out.println();
         //System.out.println("subkey");
@@ -178,10 +196,6 @@ public class Feistel {
                         ByteHelper.getBitInt(blockArray, 6), 2
         );
 
-
-        //System.out.println("positions S box " + i + " " + j + " -> " + (i*16+j));
-        
-        //return (byte)positions[(i*8) + j];
         return (byte)positions[(i*16) + j]; // ???
 
     }
