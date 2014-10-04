@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 /**
  *
- * @author Nick
+ * @author Nick, Peter
  */
 public class KeyCalculator {
 
@@ -38,33 +38,22 @@ public class KeyCalculator {
     public static int[] iteraties = new int[]{1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
 
 
-    public byte[][] generate(String key) {
+    public static byte[][] generate(String key) {
         // eerste 64 bits van string worden omgezet in bytes
         byte[] keyInBytes = Arrays.copyOfRange(key.getBytes(Charset.forName("UTF-8")), 0, 8);
         return generate(keyInBytes);
     }
 
     // maakt de keys aan
-    public byte[][] generate(byte[] sourceCD) {
-
-        //System.out.println("Key (CD)");
-        //ByteHelper.printByteArray(sourceCD);
+    public static byte[][] generate(byte[] sourceCD) {
 
         // Splitst de source array in twee tabellen (C, D)
         //byte[] permutatedBlock = ByteHelper.permutate(sourceCD, permutatieTabel1);
         byte[] permutatedBlock = ByteHelper.permutFunc(sourceCD, permutatieTabel1);
 
-        //System.out.println("permutated CD");
-        //ByteHelper.printByteArray(permutatedBlock);
-
         byte[] C = Arrays.copyOfRange(permutatedBlock, 0,(int) Math.ceil(permutatedBlock.length / 2.0));
         byte[] D = Arrays.copyOfRange(permutatedBlock, permutatedBlock.length / 2, permutatedBlock.length);
         D = ByteHelper.rotateLeft(D, 32, 4); // move 4 bits to left
-
-        //System.out.println("KeyCalc Blok C en D");
-        //ByteHelper.printByteArray(C);
-        //ByteHelper.printByteArray(D);
-        //System.out.println();
 
         //Array om de keys in op te slaan
         byte[][] keys = new byte[16][6];

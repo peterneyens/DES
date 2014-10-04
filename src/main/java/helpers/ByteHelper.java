@@ -61,11 +61,7 @@ public class ByteHelper {
         int posBit = pos % 8;
         byte valByte = data[posByte];
 
-        if (isBitSet(valByte, posBit)) {
-            return 1;
-        } else {
-            return 0;
-        }
+        return (byte) (isBitSet(valByte, posBit) ? 1 : 0);
     }
 
     // Kijkt of een bepaalde bit in een byte gelijk aan 1 is
@@ -73,7 +69,6 @@ public class ByteHelper {
     public static Boolean isBitSet(byte value, int bit) {
         return (value & (1 << bit)) != 0;
     }
-
 
     // Voert XOR uit op twee byte arrays
     // Arrays moeten van de zelfde lengte zijn
@@ -99,7 +94,6 @@ public class ByteHelper {
         return out;
     }
 
-
     //nick: Arno heeft hier een functie voor weet niet zeker of zelfde resultaat, later testen.
     // Haalt de bit op op positie pos in de byte array data
     // Source: http://www.herongyang.com/Java/Bit-String-Get-Bit-from-Byte-Array.html
@@ -110,7 +104,6 @@ public class ByteHelper {
         int valInt = valByte >> (8 - (posBit + 1)) & 0x0001;
         return valInt;
     }
-
     
     //nick: misschien deze functie zelf uitschrijven, deze komt rechstreeks van de site.
     // Stelt de bit op op positie pos in de byte array data
@@ -133,7 +126,7 @@ public class ByteHelper {
     }
 
     public static byte[] convertBinaryStringToByteArray(String binaryString) {
-        byte[] bytes = new BigInteger(binaryString, 2).toByteArray();
+        byte[] bytes = new BigInteger(binaryString.replace(" ", ""), 2).toByteArray();
 
         // als eerste bit == 1 wordt een extra byte met allemaal nullen toegevoegd
         if (binaryString.charAt(0) == '1') {

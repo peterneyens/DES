@@ -44,20 +44,19 @@ public class FeistelTest {
     // S(B1)S(B2)S(B3)S(B4)S(B5)S(B6)S(B7)S(B8):
     // 0101 1100 1000 0010 1011 0101 1001 0111
     //
-
     //
     // permutatie
     // 0010 0011 0100 1010 1010 1001 1011 1011
     @Test
     public void testFeistel() {
 
-        byte[] subKey1 = ByteHelper.convertBinaryStringToByteArray("000110 110000 001011 101111 111111 000111 000001 110010".replace(" ", ""));
-        byte[] blockR0 = ByteHelper.convertBinaryStringToByteArray("11110000 10101010 11110000 10101010".replace(" ", ""));
+        byte[] subKey1 = ByteHelper.convertBinaryStringToByteArray("000110 110000 001011 101111 111111 000111 000001 110010");
+        byte[] blockR0 = ByteHelper.convertBinaryStringToByteArray("11110000 10101010 11110000 10101010");
 
-        byte[] expectedResult = ByteHelper.convertBinaryStringToByteArray("0010 0011 0100 1010 1010 1001 1011 1011".replace(" ", ""));
+        byte[] expectedResult = ByteHelper.convertBinaryStringToByteArray("0010 0011 0100 1010 1010 1001 1011 1011");
 
         try {
-            byte[] result = new Feistel().executeFunction(blockR0, subKey1);
+            byte[] result = Feistel.executeFunction(blockR0, subKey1);
 
             System.out.println();
             System.out.println("Feistel expected vs actual result");

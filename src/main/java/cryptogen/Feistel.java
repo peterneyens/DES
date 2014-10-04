@@ -8,9 +8,11 @@ package cryptogen;
 import helpers.ByteArrayBitIterable;
 import helpers.ByteHelper;
 
+import java.util.Arrays;
+
 /**
  *
- * @author arno
+ * @author Arno, Peter
  */
 public class Feistel {
     
@@ -96,7 +98,7 @@ public class Feistel {
     subkey - 48bits - 6bytes
     
     */
-    public byte[] executeFunction(byte[] block, byte[] subkey) throws IllegalArgumentException {
+    public static byte[] executeFunction(byte[] block, byte[] subkey) throws IllegalArgumentException {
         
         if (block.length != 4)
             throw new IllegalArgumentException("Block should be 4 bytes long.");
@@ -107,47 +109,37 @@ public class Feistel {
         //System.out.println("subkey");
         //ByteHelper.printByteArray(subkey);
 
+        //long millis1 = System.nanoTime();
         byte[] transmutedBlock = ByteHelper.permutFunc(block, Feistel.expansionTabel42Bits);
         //System.out.println("expanded");
+        //long millis2 = System.nanoTime();
+        //System.out.println(" -> " + (millis2 - millis1));
         //ByteHelper.printByteArray(transmutedBlock);
 
         byte[] xoredBytes = ByteHelper.xorByteBlocks(transmutedBlock, subkey);
         //System.out.println("xored");
+        //long millis3 = System.nanoTime();
+        //System.out.println(" -> " + (millis3 - millis2));
         //ByteHelper.printByteArray(xoredBytes);
 
-        byte[] result = executeS(xoredBytes);;
+        byte[] result = executeS(xoredBytes);
         //System.out.println("result S boxes");
+        //long millis4 = System.nanoTime();
+        //System.out.println(" -> " + (millis4 - millis3));
         //ByteHelper.printByteArray(result);
 
         byte[] feistelResult = ByteHelper.permutFunc(result, Feistel.permutatieTabel32Bits);
         //System.out.println("result feistel");
+        //long millis5 = System.nanoTime();
+        //System.out.println(" -> " + (millis5 - millis4));
         //ByteHelper.printByteArray(feistelResult);
 
         return feistelResult;
     }
 
-    private byte[] executeS(byte[] block) {
+    private static byte[] executeS(byte[] block) {
 
-        byte[] helperBlock = new byte[8];
-        byte[] resultBlock = new byte[4];
-
-        int count = 0,
-            byteIndex = 0;
-
-        ByteArrayBitIterable bitStream = new ByteArrayBitIterable(block);
-
-        // itterate over each bit
-        // split into array of bits with 6 (rightmost) significant bits
-        for (boolean isBitSet : bitStream) {
-            // get bit value
-            byte bit = (isBitSet) ? (byte) 1 : (byte) 0;
-
-            helperBlock[byteIndex] = (byte) ((helperBlock[byteIndex] << 1) | bit);
-
-            count++;
-            if (count % 6 == 0)
-                byteIndex++;
-        }
+        byte[] helperBlock = splitInSextets(block);
 
         // execute S function on each byte
         // each resulting byte contains 4 bits
@@ -155,12 +147,53 @@ public class Feistel {
             helperBlock[i] = S(helperBlock[i], Feistel.s[i]);
         }
 
-        // join blocks
-        for (int i = 0; i < helperBlock.length; i += 2) {
-            resultBlock[i/2] = ByteHelper.joinBlocks(helperBlock[i], helperBlock[i + 1]);
+        return joinQuartetsToBytes(helperBlock);
+    }
+
+    /**
+     * Split the block / byte array in bytes with 6 bits.
+     *
+     * @param block
+     * @return
+     */
+    private static byte[] splitInSextets(byte[] block) {
+        byte[] copy = block;//Arrays.copyOf(block, block.length);
+
+        final int nbBits = copy.length * 8;
+        final int nbSextets = nbBits / 6;
+        byte[] sextets = new byte[nbSextets];
+
+        for(int i = 0; i < nbSextets; i++) {
+            // verplaats twee posities naar rechts en maak eerste twee bits 0
+            sextets[i] = (byte) ((copy[0] >> 2) & ~(3 << 6));
+            // zet volgende sextet vanvoor
+            copy = shift6Left(copy);
         }
 
-        return resultBlock;
+        return sextets;
+    }
+
+    /**
+     * Shift all the bits of the byte array 6 positions to the left.
+     *
+     * @param bytes byte array
+     * @return
+     */
+    private static byte[] shift6Left(byte[] bytes) {
+
+        for (int i = 0; i < bytes.length; i++) {
+            // verplaats laatste 2 bits naar voren
+            byte newByte = (byte) (bytes[i] << 6);
+            if ((i + 1) < bytes.length) {
+                // 6 volgende bits (van volgende byte) naar achteren verplaatsen en eerste bits 0 maken
+                byte lastSixBits = (byte) ((bytes[i + 1] >> 2) & ~((2+1) << 6));
+                // voeg laatste 6 bits toe aan eerste twee bits
+                newByte |= lastSixBits;
+            }
+            bytes[i] = newByte;
+        }
+
+        return bytes;
     }
 
     /* Implementeert S functie
@@ -170,33 +203,27 @@ public class Feistel {
     matrix       -- matrix van mogelijke getallen
     
     */
-    private byte S(byte block, int[] positions) {
-
-        //byte[] blockArray = new byte[]{block};
+    private static byte S(byte block, int[] positions) {
 
         // neem eesrste en zesde bit en verander naar int
-        //int i = Byte.parseByte("" + ByteHelper.getBitInt(blockArray, 2) + ByteHelper.getBitInt(blockArray, 7) , 2);
-
         // verplaats de 6e bit naar de 2e bit en maak de 1e bit 0
         // tel de eerste bit hierbij op
         int externalTwo = ((block >> 4) & ~1) + (block & 1);
         int i = externalTwo;
 
         // neem de middelste 4 bits en verander naar int
-        /*
-        int j = Byte.parseByte("" +
-                        ByteHelper.getBitInt(blockArray, 3) +
-                        ByteHelper.getBitInt(blockArray, 4) +
-                        ByteHelper.getBitInt(blockArray, 5) +
-                        ByteHelper.getBitInt(blockArray, 6), 2
-        );
-        */
-
-        // maak de "grootste" bits 0 en verlaats een positie naar rechts
-        byte middleFour = (byte) ((block & ~(7 << 5)) >> 1);
+        // verlaats een positie naar rechts en maak de grootste 4 bits 0
+        byte middleFour = (byte) ((block >> 1) & ~((8+4+2+1) << 4)) ;
         int j = middleFour;
 
         return (byte)positions[(i*16) + j];
     }
 
+    private static byte[] joinQuartetsToBytes(byte[] helperBlock) {
+        byte[] resultBlock = new byte[helperBlock.length / 2];
+        for (int i = 0; i < helperBlock.length; i += 2) {
+            resultBlock[i/2] = ByteHelper.joinBlocks(helperBlock[i], helperBlock[i + 1]);
+        }
+        return resultBlock;
+    }
 }

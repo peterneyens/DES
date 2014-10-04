@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * Created by peter on 22/09/14.
+ * @author Peter.
  */
 public class DesEncryption {
 
@@ -39,22 +39,22 @@ public class DesEncryption {
     };
 
     public static void encryptFile(String filePath, String key) {
-        final byte[][] subKeys = new KeyCalculator().generate(key);
+        final byte[][] subKeys = KeyCalculator.generate(key);
         final byte[][] reversedSubKeys = reverseSubKeys(subKeys);
 
         long before = System.nanoTime();
-        encryptFile(filePath, subKeys);
-        decryptFile(filePath + ".des", reversedSubKeys);
+        //encryptFile(filePath, subKeys);
+        //decryptFile(filePath + ".des", reversedSubKeys);
         long afterSync = System.nanoTime();
         encryptFileAsync(filePath, subKeys);
-        decryptFileAsync(filePath + ".des2", reversedSubKeys);
+        //decryptFileAsync(filePath + ".des2", reversedSubKeys);
         long afterAsync = System.nanoTime();
 
         System.out.println("Sync " + (afterSync - before) + " Async " + (afterAsync - afterSync));
     }
 
     public static void decryptFile(String filePath, String key) {
-        byte[][] subKeys = new KeyCalculator().generate(key);
+        byte[][] subKeys = KeyCalculator.generate(key);
         byte[][] reversedSubKeys = reverseSubKeys(subKeys);
 
         decryptFileAsync(filePath, reversedSubKeys);
@@ -120,10 +120,8 @@ public class DesEncryption {
             final int nbBytesHeading = inputStream.read();
 
             byte[] block = new byte[blockSizeInBytes];
-            int bytesRead = 0;
             for (long nbBlocks = 1; nbBlocks <= nbTotalBlocks; nbBlocks++) {
-
-                bytesRead = inputStream.read(block);
+                inputStream.read(block);
 
                 System.out.println("Decrypting block " + nbBlocks);
                 byte[] decryptedBlock = decryptBlock(block, reversedSubKeys);
@@ -180,7 +178,7 @@ public class DesEncryption {
                 bytesRead = inputStream.read(block);
 
                 final byte[] finalBlock = block;
-                System.out.println("Encrypting block async " + nbBlocks);
+                //System.out.println("Encrypting block async " + nbBlocks);
                 futures.add(CompletableFuture.supplyAsync(() -> {
                     return encryptBlock(finalBlock, subKeys);
                 }, executor).exceptionally(ex -> {
@@ -197,7 +195,7 @@ public class DesEncryption {
             futures.stream().forEachOrdered(encryptedBlock -> {
                 try {
                     outputStream.write(encryptedBlock.get());
-                    System.out.println("Blok weggeschreven");
+                    //System.out.println("Blok weggeschreven");
                 } catch (InterruptedException | ExecutionException | IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -231,16 +229,13 @@ public class DesEncryption {
             final long nbTotalBlocks = (long) Math.ceil(nbBytesFileWithoutHeader / (double) blockSizeInBytes);
 
             final int nbBytesPadding = inputStream.read();
-            System.out.println("padding " + nbBytesPadding);
 
             byte[] block = new byte[blockSizeInBytes];
-            int bytesRead = 0;
             for (int nbBlocks = 1; nbBlocks <= nbTotalBlocks; nbBlocks++) {
-
-                bytesRead = inputStream.read(block);
+                inputStream.read(block);
 
                 final byte[] finalBlock = block;
-                System.out.println("Decrypting block async " + nbBlocks);
+                //System.out.println("Decrypting block async " + nbBlocks);
                 futures.add(CompletableFuture.supplyAsync(() -> {
                     return decryptBlock(finalBlock, reversedSubKeys);
                 }, executor).exceptionally(ex -> {
@@ -251,9 +246,6 @@ public class DesEncryption {
             }
             inputStream.close();
 
-            //futures.stream().forEachOrdered(encryptedBlock -> {
-            //});
-
             for (int i = 1; i <= nbTotalBlocks; i++) {
                 byte[] decryptedBlock = futures.get(i-1).get();
                 if  (i == nbTotalBlocks) {
@@ -261,7 +253,7 @@ public class DesEncryption {
                 }
 
                 outputStream.write(decryptedBlock);
-                System.out.println("Blok " + i +" weggeschreven");
+                //System.out.println("Blok " + i +" weggeschreven");
             }
 
             outputStream.close();
@@ -279,7 +271,7 @@ public class DesEncryption {
             throw new IllegalArgumentException("Block not 8 length");
 
         //long millis1 = System.nanoTime();
-        byte[] permutatedBlock = ByteHelper.permutFunc(block, initialPermutation);
+        final byte[] permutatedBlock = ByteHelper.permutFunc(block, initialPermutation);
         //long millis2 = System.nanoTime();
         //System.out.println("Time permutation " + (millis2 - millis1));
 
@@ -288,10 +280,6 @@ public class DesEncryption {
         prevLeft = Arrays.copyOfRange(permutatedBlock, 0, (int) Math.ceil(permutatedBlock.length / 2.0));
         prevRight = Arrays.copyOfRange(permutatedBlock, permutatedBlock.length / 2, permutatedBlock.length);
 
-        //System.out.println("Iteratie 0");
-        //ByteHelper.printByteArray(prevLeft);
-        //ByteHelper.printByteArray(prevRight);
-
         // bereken L1 R1 tem L15 R15
         for (int i = 1; i <= 16; i++) {
 
@@ -299,14 +287,8 @@ public class DesEncryption {
             left = prevRight;
 
             //long millisBeforeXorFeistel = System.nanoTime();
-            right = ByteHelper.xorByteBlocks(prevLeft, new Feistel().executeFunction(prevRight, subKeys[i-1]));
+            right = ByteHelper.xorByteBlocks(prevLeft, Feistel.executeFunction(prevRight, subKeys[i - 1]));
             //System.out.println("time xor feistel " + (System.nanoTime() - millisBeforeXorFeistel));
-
-            //System.out.println();
-            //System.out.println("Iteratie " + i);
-            //ByteHelper.printByteArray(left);
-            //ByteHelper.printByteArray(right);
-            //System.out.println("------------------------------------------------------");
 
             // voorbereiding volgende iteratie
             prevLeft = left;
@@ -321,7 +303,6 @@ public class DesEncryption {
         //System.out.println("Time iterations " + (millis3 - millis2));
 
         return ByteHelper.permutFunc(concatBlocks(left, right), inverseInitialPermutation);
-
     }
 
     public static byte[] decryptBlock(byte[] block, byte[][] reversedSubKeys) throws IllegalArgumentException {
@@ -337,21 +318,25 @@ public class DesEncryption {
         return reversedSubKeys;
     }
 
-    /*private static <T> T[] reverseArray(T[] array) {
+    /*
+    private static <T> T[] reverseArray(T[] array) {
         // reverse array (reversing list reverses array <-- http://stackoverflow.com/a/12893811)
         Collections.reverse(Arrays.asList(array));
         return array;
-    }*/
+    }
+    */
 
     // based on http://stackoverflow.com/a/12678906
-    /*private static <T> T[] reverseArray(T[] array) {
+    /*
+    private static <T> T[] reverseArray(T[] array) {
         for (int i = 0; i < array.length / 2; i++) {
             T temp = array[i];
             array[i] = array[array.length - 1 - i];
             array[array.length - 1 - i] = temp;
         }
         return array;
-    }*/
+    }
+    */
 
     // based on http://stackoverflow.com/a/784842
     private static byte[] concatBlocks(byte[] left, byte[] right) {
@@ -359,5 +344,4 @@ public class DesEncryption {
         System.arraycopy(right, 0, result, left.length, right.length);
         return result;
     }
-
 }
