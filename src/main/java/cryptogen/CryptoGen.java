@@ -36,7 +36,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class CryptoGen extends JFrame implements ActionListener {
 
     private JTextField txtDesFile, txtDesKey, txtStenagoImage;
-    private JButton btnDesEncode, btnDesDecode, btnDesFile, btnStenagoEncode, btnStenagoDecode, btnStenagoImage;
+    private JButton btnDesEncode, btnDesDecode, btnDesFile,
+                    btnStenagoEncode, btnStenagoDecode, btnStenagoImage;
     private JTextArea txtStenagoText, txtConsole;
 
     public CryptoGen() {
@@ -81,19 +82,16 @@ public class CryptoGen extends JFrame implements ActionListener {
         btnDesFile = new JButton("Select File");
         btnDesFile.addActionListener(this);
         pDes.add(btnDesFile, gbc);
-        
         gbc.gridx = 1;
         gbc.gridy = 3;
         btnDesDecode = new JButton("Start Decryption");
         btnDesDecode.addActionListener(this);
         pDes.add(btnDesDecode, gbc);
-        
         gbc.gridx = 2;
         gbc.gridy = 3;
         btnDesEncode = new JButton("Start Encryption");
         btnDesEncode.addActionListener(this);
-        pDes.add(btnDesEncode, gbc);        
-        
+        pDes.add(btnDesEncode, gbc);
 
         //des paneel toevoegen aan frame
         pMain.add(pDes, BorderLayout.WEST);
@@ -148,10 +146,6 @@ public class CryptoGen extends JFrame implements ActionListener {
         txtConsole = new JTextArea(20, 20);
         JScrollPane scrollPane = new JScrollPane(txtConsole);
         pMain.add(scrollPane, BorderLayout.SOUTH);
-        
-        txtDesFile.setText("/home/arno/test");
-        txtDesKey.setText("password");
-        
     }
 
     public static void main(String[] args) {
@@ -217,23 +211,17 @@ public class CryptoGen extends JFrame implements ActionListener {
             
             txtConsole.append("Decoding finished!" + "\n\r");
         } else if (e.getSource() == btnDesEncode) {
-            System.out.println("Start encrypting file");
             txtConsole.append("Encrypting started!" + "\n\r");
             long before = System.currentTimeMillis();
-            DesEncryption.encryptOrDecryptFile(txtDesFile.getText(), txtDesKey.getText(), DesEncryption.opperation.ENCRYPT);
+            DesEncryption.encryptFile(txtDesFile.getText(), txtDesKey.getText());
             long after = System.currentTimeMillis();
-            txtConsole.append("Time encrypting in milliseconds " + (after - before));
+            txtConsole.append("Time encrypting in milliseconds " + (after - before) + "\n\r");
         } else if (e.getSource() == btnDesDecode) {
-            if(txtDesFile.getText().indexOf(".des") == -1) {
-                JOptionPane.showMessageDialog(null, "Als je gaat decrypteren moet je een .des file kiezen.", "Fout formaat", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            System.out.println("Start dencrypting file");
-            txtConsole.append("Decryption started!" + "\n\r");
+            txtConsole.append("Decrypting started!" + "\n\r");
             long before = System.currentTimeMillis();
-            DesEncryption.encryptOrDecryptFile(txtDesFile.getText(), txtDesKey.getText(), DesEncryption.opperation.DECRYPT);
+            DesEncryption.decryptFile(txtDesFile.getText(), txtDesKey.getText());
             long after = System.currentTimeMillis();
-            txtConsole.append("Time encrypting in milliseconds " + (after - before));
+            txtConsole.append("Time decrypting in milliseconds " + (after - before) + "\n\r");
         }
 
     }
