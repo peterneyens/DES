@@ -9,9 +9,18 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import javax.imageio.ImageIO;
 import javax.swing.JTextArea;
 
@@ -31,44 +40,78 @@ public class Stenagography {
     
      gebaseerd op http://www.dreamincode.net/forums/topic/27950-steganography/
      */
-    public static BufferedImage encode(String path, String msg) {
+    public static BufferedImage encode(String path, String msg, boolean file) {
 
         //foto ophalen van disk
         BufferedImage selectedImage = getImage(path);
 
         //kopie maken van geselecteerde foto zodat de foto aangepast kan worden in Java (userspace)
         BufferedImage img = cloneImage(selectedImage);
-
-        img = encodeMessage(img, msg);
+        if (file) {
+            img = encodeMessage(img, msg, file);
+        } else {
+            img = encodeMessage(img, msg, file);
+        }
 
         console.append("Encoding has been completed!" + "\n\r");
 
         return (img);
     }
 
-    public static BufferedImage encodeMessage(BufferedImage img, String msg) {
+    public static BufferedImage encodeMessage(BufferedImage img, String msg, boolean file) {
         //foto omzetten naar een byte array
         byte bImg[] = getBytes(img);
+        //Controle of er gelezen wordt van een DES file
+        if (file) {
+            // byte gegevensopslaan en uitlezen
+            byte[] block = null;
+            int bLen = 0;
+            try {
+                final File inputFile = new File(msg);
+                final InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
 
-        //tekst omzetten naar een byte array
-        byte bMsg[] = msg.getBytes();
+                final long nbBytesFile = inputFile.length();
 
-        //byte array maken van de lengte van de tekst
-        byte bLen[] = getBytes(bMsg.length);
+                if (nbBytesFile > (long) Integer.MAX_VALUE) {
+                    throw new Exception("File to big.");
+                } else {
+                    bLen = (int) nbBytesFile;
+                    block = new byte[bLen];
+                }
+                inputStream.read(block);
+                System.out.println("Reading file with: " + nbBytesFile + " bytes");
 
-        //lengte van de tekst in de eerste 32 bits van de foto zetten
-        addText(bImg, bLen, 0);
+                inputStream.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-        //tekst in de foto zetten
-        addText(bImg, bMsg, 32); //32 offset voor de lengte
+            addText(bImg, getBytes(bLen), 0);
+            addText(bImg, block, 32);
+        } else {
+            //tekst omzetten naar een byte array
+            byte bMsg[] = msg.getBytes();
 
+            //byte array maken van de lengte van de tekst
+            byte bLen[] = getBytes(bMsg.length);
+
+            //lengte van de tekst in de eerste 32 bits van de foto zetten
+            addText(bImg, bLen, 0);
+
+            //tekst in de foto zetten
+            addText(bImg, bMsg, 32); //32 offset voor de lengte
+        }
         //compare(getBytes(selectedImage), bImg, bMsg.length * 8 + 32);
         //byte array omzetten naar foto
         //img =  getImage(bImg);
         return img;
     }
 
-    public static String decode(String path) {
+    public static String decode(String path, boolean file) {
         //foto ophalen van disk
         BufferedImage selectedImage = getImage(path);
 
@@ -77,7 +120,22 @@ public class Stenagography {
 
         //retrieve message from image
         String msg = decodetext(img);
-
+        
+        //Scrijft message naar een file EN output box
+        if (file) {
+            try {
+                final File outputFile = new File(path + ".des2");
+                final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
+                outputStream.write(msg.getBytes());
+                outputStream.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return msg;
     }
 

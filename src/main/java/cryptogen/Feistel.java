@@ -5,10 +5,8 @@
  */
 package cryptogen;
 
-import helpers.ByteArrayBitIterable;
 import helpers.ByteHelper;
 
-import java.util.Arrays;
 
 /**
  *

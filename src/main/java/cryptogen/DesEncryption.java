@@ -5,7 +5,6 @@ import helpers.ByteHelper;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -111,7 +110,7 @@ public class DesEncryption {
 
         try {
             final File inputFile = new File(filePath);
-            final File outputFile = new File(filePath.replace(".des",".decrypted"));
+            final File outputFile = new File(filePath.replace(".des","decr.txt"));
             final InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
             final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 
@@ -218,7 +217,7 @@ public class DesEncryption {
 
         try {
             final File inputFile = new File(filePath);
-            final File outputFile = new File(filePath.replace(".des2",".decryptedasync"));
+            final File outputFile = new File(filePath.replace(".des2","decr.txt"));
             final InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
             final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 

@@ -18,6 +18,7 @@ import java.io.File;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -35,10 +36,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class CryptoGen extends JFrame implements ActionListener {
 
-    private JTextField txtDesFile, txtDesKey, txtStenagoImage;
+    private JTextField txtDesFile, txtDesKey, txtStenagoImage, txtStenagoFile;
     private JButton btnDesEncode, btnDesDecode, btnDesFile,
-                    btnStenagoEncode, btnStenagoDecode, btnStenagoImage;
+            btnStenagoEncode, btnStenagoDecode, btnStenagoImage, btnStenagoFile;
     private JTextArea txtStenagoText, txtConsole;
+    private JCheckBox cbStenago;
 
     public CryptoGen() {
         initGui();
@@ -125,13 +127,31 @@ public class CryptoGen extends JFrame implements ActionListener {
         btnStenagoImage = new JButton("Select Image");
         btnStenagoImage.addActionListener(this);
         pStenago.add(btnStenagoImage, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        pStenago.add(new JLabel("File:"), gbc);
         gbc.gridx = 1;
         gbc.gridy = 3;
+        txtStenagoFile = new JTextField(10);
+        txtStenagoFile.setEditable(false);
+        pStenago.add(txtStenagoFile, gbc);
+        gbc.gridx = 2;
+        gbc.gridy = 3;
+        btnStenagoFile = new JButton("Select File");
+        btnStenagoFile.addActionListener(this);
+        pStenago.add(btnStenagoFile, gbc);
+        gbc.gridx = 3;
+        gbc.gridy = 3;
+        cbStenago = new JCheckBox("Use file");
+        cbStenago.addActionListener(this);
+        pStenago.add(cbStenago);
+        gbc.gridx = 1;
+        gbc.gridy = 4;
         btnStenagoDecode = new JButton("Start Decryption");
         btnStenagoDecode.addActionListener(this);
         pStenago.add(btnStenagoDecode, gbc);
         gbc.gridx = 2;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         btnStenagoEncode = new JButton("Start Encryption");
         btnStenagoEncode.addActionListener(this);
         pStenago.add(btnStenagoEncode, gbc);
@@ -187,7 +207,12 @@ public class CryptoGen extends JFrame implements ActionListener {
             txtConsole.append("Encoding started!" + "\n\r");
 
             //start encoding
-            BufferedImage img = Stenagography.encode(txtStenagoImage.getText(), txtStenagoText.getText());
+            BufferedImage img;
+            if (cbStenago.isSelected())                 
+                img = Stenagography.encode(txtStenagoImage.getText(), txtStenagoFile.getText(), true);
+             else 
+                img = Stenagography.encode(txtStenagoImage.getText(), txtStenagoText.getText(), false);
+            
             JFileChooser fch = new JFileChooser();
 
             int returnVal = fch.showSaveDialog(this);
@@ -197,18 +222,21 @@ public class CryptoGen extends JFrame implements ActionListener {
             }
 
             txtStenagoText.setText("");
-            
+
             txtConsole.append("Encoding finished!" + "\n\r");
         } else if (e.getSource() == btnStenagoDecode) {
             Stenagography.console = txtConsole;
             Stenagography.DEBUG = true;
-            
+
             txtConsole.append("Decoding started!" + "\n\r");
-            
-            String str = Stenagography.decode(txtStenagoImage.getText());
+             String str;
+            if (cbStenago.isSelected())  
+                str = Stenagography.decode(txtStenagoImage.getText(), true);
+            else
+                str = Stenagography.decode(txtStenagoImage.getText(), false);
             
             txtStenagoText.setText(str);
-            
+
             txtConsole.append("Decoding finished!" + "\n\r");
         } else if (e.getSource() == btnDesEncode) {
             txtConsole.append("Encrypting started!" + "\n\r");
@@ -222,8 +250,28 @@ public class CryptoGen extends JFrame implements ActionListener {
             DesEncryption.decryptFile(txtDesFile.getText(), txtDesKey.getText());
             long after = System.currentTimeMillis();
             txtConsole.append("Time decrypting in milliseconds " + (after - before) + "\n\r");
-        }
+        } else if (e.getSource() == btnStenagoFile) {
+            //create file choose window
+            JFileChooser fch = new JFileChooser();
+            fch.showSaveDialog(this);
 
+            //check of een file is geselecteerd
+            if (fch.getSelectedFile() != null) {
+                txtStenagoFile.setText(fch.getSelectedFile().getAbsolutePath());
+            }
+        } else if (e.getSource() == cbStenago) {
+            if (cbStenago.isSelected()) {
+                txtStenagoText.setEditable(false);
+                txtStenagoText.setText("");
+                txtStenagoFile.setEditable(true);
+                txtStenagoText.setBackground(Color.GRAY);
+            } else {
+                txtStenagoText.setEditable(true);
+                txtStenagoFile.setEditable(false);
+                txtStenagoFile.setText("");
+                txtStenagoText.setBackground(Color.WHITE);
+            }
+        }
     }
 
     public void writeImage(String path, String ext, BufferedImage img) {
