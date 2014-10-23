@@ -14,7 +14,7 @@ import java.util.concurrent.*;
  */
 public class DesEncryption {
 
-    private static final int blockSizeInBytes = 8;
+    public static final int blockSizeInBytes = 8;
 
     private static final int[] initialPermutation = new int[] {
         58, 50, 42, 34, 26, 18, 10, 2,
@@ -46,7 +46,8 @@ public class DesEncryption {
         //encryptFile(filePath, subKeys);
         //decryptFile(filePath + ".des", reversedSubKeys);
         long afterSync = System.nanoTime();
-        encryptFileAsync(filePath, subKeys);
+        //encryptFileAsync(filePath, subKeys);
+        DesEncryptionService.encryptFile(filePath, subKeys);
         //decryptFileAsync(filePath + ".des2", reversedSubKeys);
         long afterAsync = System.nanoTime();
 
@@ -57,10 +58,11 @@ public class DesEncryption {
         byte[][] subKeys = KeyCalculator.generate(key);
         byte[][] reversedSubKeys = reverseSubKeys(subKeys);
 
-        decryptFileAsync(filePath, reversedSubKeys);
+        //decryptFileAsync(filePath, reversedSubKeys);
+        DesEncryptionService.decryptFile(filePath, reversedSubKeys);
     }
 
-
+    /*
     private static void encryptFile(String filePath, byte[][] subKeys) {
         System.out.println();
         System.out.println("Encrypting");
@@ -148,6 +150,7 @@ public class DesEncryption {
             e.printStackTrace();
         }
     }
+    */
 
     private static void encryptFileAsync(String filePath, byte[][] subKeys) {
         System.out.println();
@@ -216,9 +219,11 @@ public class DesEncryption {
         System.out.println();
         System.out.println("Decrypting Async");
 
+        System.out.println("test");
+
         try {
             final File inputFile = new File(filePath);
-            final File outputFile = new File(filePath.replace(".des2",".decryptedasync"));
+            final File outputFile = new File(filePath.replace(".des",".decryptedasync"));
             final InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
             final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 
@@ -227,6 +232,8 @@ public class DesEncryption {
 
             final long nbBytesFileWithoutHeader = inputFile.length() - 1;
             final long nbTotalBlocks = (long) Math.ceil(nbBytesFileWithoutHeader / (double) blockSizeInBytes);
+            System.out.println("file lenght " + inputFile.length()); 
+            System.out.println("nbTotalBlocks " + nbTotalBlocks);
 
             final int nbBytesPadding = inputStream.read();
 
