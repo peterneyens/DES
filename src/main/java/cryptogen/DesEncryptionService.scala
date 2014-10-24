@@ -16,6 +16,7 @@ case class EncryptBlock(block: Array[Byte], subKeys: Array[Array[Byte]], id: Lon
 case class DecryptBlock(block: Array[Byte], subKeys: Array[Array[Byte]], id: Long)
 case class EncryptedBlock(block: Array[Byte], id: Long)
 case class DecryptedBlock(block: Array[Byte], id: Long)
+case class AllDataEncrypted
 
 
 /**
@@ -26,20 +27,27 @@ case class DecryptedBlock(block: Array[Byte], id: Long)
 object DesEncryptionService {
 
   val system = ActorSystem()
-  val desEncryptionActor = system.actorOf(Props[DesEncryptionActor], "desEncryptionActor")
+  val worker = system.actorOf(
+    props = Props[DesEncryptionWorker].withRouter(RoundRobinPool(10)),
+    name = "desEncryptionService"
+  )
+
+  //val desEncryptionActor = system.actorOf(Props[DesEncryptionActor], "desEncryptionActor")
 
   /**
    * Encrypt the file with the specified file path with the specified sub keys using DES.
    */
   def encryptFile(filePath: String, subKeys: Array[Array[Byte]]) = {
-    desEncryptionActor ! EncryptFile(filePath, subKeys)
+    val actor = system.actorOf(DesEncryptionActor.props(worker))//, name = "des-encrypt-" + filePath)
+    actor ! EncryptFile(filePath, subKeys)
   }
 
   /**
    * Decrypt the file with the specified file path with the specified sub keys using DES.
    */
   def decryptFile(filePath: String, reversedSubKeys: Array[Array[Byte]]) = {
-    desEncryptionActor ! DecryptFile(filePath, reversedSubKeys)
+    val actor = system.actorOf(DesEncryptionActor.props(worker))//, name = "des-decrypt-" + filePath)
+    actor ! DecryptFile(filePath, reversedSubKeys)
   }
   
   
@@ -62,10 +70,22 @@ object DesEncryptionService {
    
   }
 
+  object DesEncryptionActor {
+    
+    /**
+     * Create Props for an actor of this type.
+     * @param worker The worker to be passed to this actor’s constructor.
+     * @return a Props for creating this actor, which can then be further configured
+     * (e.g. calling `.withDispatcher()` on it)
+     */
+    def props(worker: ActorRef): Props = Props(new DesEncryptionActor(worker))
+  
+  }
+
   /**
    * DesEncryptionActor which encrypts/decrypts files using DES.
    */
-  class DesEncryptionActor extends Actor with ActorLogging {
+  class DesEncryptionActor(worker: ActorRef) extends Actor with ActorLogging {
   
     var outputStream: OutputStream = new NullOutputStream() //TODO
     var encryptedBlocks = scala.collection.mutable.MutableList[(Array[Byte], Long)]()
@@ -73,25 +93,22 @@ object DesEncryptionService {
     var nbBytesPadding = 0
 
     val blockSizeInBytes = DesEncryption.blockSizeInBytes
-    val worker = context.system.actorOf(
-      props = Props[DesEncryptionWorker].withRouter(RoundRobinPool(10)),
-      name = "desEncryptionService"
-    )
 
     /**
      * Process received messages.
      */
     def receive = {
       case EncryptFile(filePath, subKeys) => encryptFile(filePath, subKeys)
-      case DecryptFile(filePath, subKeys) => decryptBlocks(filePath, subKeys)
+      case DecryptFile(filePath, subKeys) => decryptFile(filePath, subKeys)
       case EncryptedBlock(block, id) => processEncryptedBlock(block, id)
       case DecryptedBlock(block, id) => processDecryptedBlock(block, id)
+      case AllDataEncrypted => writeAllDataToFile
     }
 
     /**
      * Encrypt the file with the specified file path using the specified sub keys.
      */
-    def encryptFile(filePath: String, subKeys: Array[Array[Byte]]) = {
+    private def encryptFile(filePath: String, subKeys: Array[Array[Byte]]) = {
       val inputFile = new File(filePath)
       val inputStream = new BufferedInputStream(new FileInputStream(inputFile))
       val outputFile = new File(filePath + ".des")
@@ -101,10 +118,9 @@ object DesEncryptionService {
 
       val nbBytesFile = inputFile.length
       nbTotalBlocks = (nbBytesFile / blockSizeInBytes.toDouble).ceil.toLong
-      val nbBytesPaddingNeeded = (blockSizeInBytes - (nbBytesFile % blockSizeInBytes)).toInt
-
       log.info(f"Nb blocks $nbTotalBlocks")
       
+      val nbBytesPaddingNeeded = (blockSizeInBytes - (nbBytesFile % blockSizeInBytes)).toInt
       val header = nbBytesPaddingNeeded.toByte
       outputStream.write(header)
 
@@ -120,7 +136,7 @@ object DesEncryptionService {
     /**
      * Decrypt the file with the specified file path using the specified sub keys.
      */
-    def decryptBlocks(filePath: String, subKeys: Array[Array[Byte]]) = {
+    private def decryptFile(filePath: String, subKeys: Array[Array[Byte]]) = {
       val inputFile = new File(filePath)
       val inputStream = new BufferedInputStream(new FileInputStream(inputFile))
       val outputFile = new File(filePath.replace(".des", ".decrypt"))
@@ -129,8 +145,7 @@ object DesEncryptionService {
       log.info(f"Decrypt file $filePath")
 
       val nbBytesFileWithoutHeader = inputFile.length - 1
-      val nbTotalBlocks = Math.ceil(nbBytesFileWithoutHeader / blockSizeInBytes.toDouble).toLong
-
+      nbTotalBlocks = Math.ceil(nbBytesFileWithoutHeader / blockSizeInBytes.toDouble).toLong
       log.info(f"Nb blocks $nbTotalBlocks") 
       nbBytesPadding = inputStream.read.toInt
      
@@ -144,17 +159,17 @@ object DesEncryptionService {
     }
 
     /**
-     * Save the encrypted block and write all the blocks to a file when all the blocks are encrypted.
+     * Save the encrypted block.
      */
-    def processEncryptedBlock(block: Array[Byte], id: Long) = processBlock(block, id, true)
+    private def processEncryptedBlock(block: Array[Byte], id: Long) = processBlock(block, id, true)
     
     /**
-     * Save the decrypted block and write all the blocks to a file when all the blocks are decrypted.
+     * Save the decrypted block.
      */
-    def processDecryptedBlock(block: Array[Byte], id: Long) = processBlock(block, id, false)
+    private def processDecryptedBlock(block: Array[Byte], id: Long) = processBlock(block, id, false)
 
     /**
-     * Save the block and write all the blocks to a file when all the blocks are encrypted/decrypted.
+     * Save the block.
      */
     private def processBlock(block: Array[Byte], id: Long, encryption: Boolean) =  {
       // delete padding from last block if decrypting
@@ -175,14 +190,19 @@ object DesEncryptionService {
 
       // all blocks are encrypted/decrypted
       if (encryptedBlocks.length == nbTotalBlocks) {
-        log.info(f"Write file")
-        encryptedBlocks.sortWith(_._2 < _._2).map(_._1).foreach(outputStream.write)
-        outputStream.close
-
-        // clear for next file
-        // TODO: multiple files same time (map with filenames and lists of encrypted blocks)
-        encryptedBlocks = scala.collection.mutable.MutableList[(Array[Byte], Long)]()
+        self ! AllDataEncrypted
       }
+    }
+    
+    /**
+     * Write all the encrypted/decrypted blocks to the output file.
+     */
+    private def writeAllDataToFile = {
+      log.info(f"Write file")
+      encryptedBlocks.sortWith(_._2 < _._2).map(_._1).foreach(outputStream.write)
+      outputStream.close
+      
+      context.stop(self)
     }
   }
    
