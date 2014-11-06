@@ -4,6 +4,7 @@ import helpers.ByteHelper;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.security.MessageDigest;
 
 /**
  *
@@ -35,17 +36,46 @@ public class KeyCalculator {
     };
 
     //aantal iteraties
-    public static int[] iteraties = new int[]{1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
+    private static int[] iteraties = new int[]{1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
 
 
-    public static byte[][] generate(String key) {
-        // eerste 64 bits van string worden omgezet in bytes
-        byte[] keyInBytes = Arrays.copyOfRange(key.getBytes(Charset.forName("UTF-8")), 0, 8);
-        return generate(keyInBytes);
+    // returns an array of subkeys (a subkey is a byte array)
+    public static byte[][][] generate(String key) {
+        //byte[] keyInBytes = Arrays.copyOfRange(createHash(key), 0, 8);
+        //return new byte[][][] { generateSubKeys(keyInBytes) };
+        return generateForNDes(key, 1);
     }
 
+    public static byte[][][] generateFor3Des(String key) {
+        return generateForNDes(key, 3);
+    }
+
+    public static byte[][][] generateForNDes(String key, int nDes) {
+        byte[] hash = createHash(key);
+      
+        if (nDes > (hash.length / 8)) 
+            throw new IllegalArgumentException("nDes to big for hashed key");
+
+        byte[][][] subKeysNDes = new byte[nDes][][];
+        for (int i = 0; i < nDes; i++) {
+            subKeysNDes[i] = generateSubKeys(Arrays.copyOfRange(hash, i, i + 8));
+        }
+
+        return subKeysNDes;
+    }
+
+    private static byte[] createHash(String text) {
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(text.getBytes(Charset.forName("UTF-8")));
+        } catch (java.security.NoSuchAlgorithmException ex) { 
+            System.out.println(ex.getMessage());
+            return null;
+        }
+    }
+
+    
     // maakt de keys aan
-    public static byte[][] generate(byte[] sourceCD) {
+    public static byte[][] generateSubKeys(byte[] sourceCD) {
 
         // Splitst de source array in twee tabellen (C, D)
         //byte[] permutatedBlock = ByteHelper.permutate(sourceCD, permutatieTabel1);

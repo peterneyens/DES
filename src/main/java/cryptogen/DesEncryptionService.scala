@@ -32,8 +32,6 @@ object DesEncryptionService {
     name = "desEncryptionService"
   )
 
-  //val desEncryptionActor = system.actorOf(Props[DesEncryptionActor], "desEncryptionActor")
-
   /**
    * Encrypt the file with the specified file path with the specified sub keys using DES.
    */

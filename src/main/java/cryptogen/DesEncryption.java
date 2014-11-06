@@ -39,27 +39,17 @@ public class DesEncryption {
     };
 
     public static void encryptFile(String filePath, String key) {
-        final byte[][] subKeys = KeyCalculator.generate(key);
-        final byte[][] reversedSubKeys = reverseSubKeys(subKeys);
-
-        long before = System.nanoTime();
-        //encryptFile(filePath, subKeys);
-        //decryptFile(filePath + ".des", reversedSubKeys);
-        long afterSync = System.nanoTime();
-        //encryptFileAsync(filePath, subKeys);
-        DesEncryptionService.encryptFile(filePath, subKeys);
-        //decryptFileAsync(filePath + ".des2", reversedSubKeys);
-        long afterAsync = System.nanoTime();
-
-        System.out.println("Sync " + (afterSync - before) + " Async " + (afterAsync - afterSync));
+        final byte[][][] subKeys = KeyCalculator.generateFor3Des(key);
+        encryptFileAsync(filePath, subKeys);
+        //DesEncryptionService.encryptFile(filePath, subKeys);
     }
 
     public static void decryptFile(String filePath, String key) {
-        byte[][] subKeys = KeyCalculator.generate(key);
-        byte[][] reversedSubKeys = reverseSubKeys(subKeys);
+        final byte[][][] subKeys = KeyCalculator.generateFor3Des(key);
+        byte[][][] reversedSubKeys = reverseSubKeys(subKeys);
 
-        //decryptFileAsync(filePath, reversedSubKeys);
-        DesEncryptionService.decryptFile(filePath, reversedSubKeys);
+        decryptFileAsync(filePath, reversedSubKeys);
+        //DesEncryptionService.decryptFile(filePath, reversedSubKeys);
     }
 
     /*
@@ -152,13 +142,13 @@ public class DesEncryption {
     }
     */
 
-    private static void encryptFileAsync(String filePath, byte[][] subKeys) {
+    private static void encryptFileAsync(String filePath, byte[][][] subKeys) {
         System.out.println();
         System.out.println("Encrypting Async");
 
         try {
             final File inputFile = new File(filePath);
-            final File outputFile = new File(filePath + ".des2");
+            final File outputFile = new File(filePath + ".des");
             final InputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
             final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 
@@ -215,11 +205,9 @@ public class DesEncryption {
         }
     }
 
-    private static void decryptFileAsync(String filePath, byte[][] reversedSubKeys) {
+    private static void decryptFileAsync(String filePath, byte[][][] reversedSubKeys) {
         System.out.println();
         System.out.println("Decrypting Async");
-
-        System.out.println("test");
 
         try {
             final File inputFile = new File(filePath);
@@ -262,6 +250,8 @@ public class DesEncryption {
                 outputStream.write(decryptedBlock);
                 //System.out.println("Blok " + i +" weggeschreven");
             }
+            System.out.println("Done writing to file");
+
 
             outputStream.close();
         } catch (FileNotFoundException e) {
@@ -271,6 +261,14 @@ public class DesEncryption {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static byte[] encryptBlock(byte[] block, byte[][][] subKeys) throws IllegalArgumentException {
+        byte[] tempBlock = block;
+        for (int i = 0; i < subKeys.length; i++) {
+            tempBlock = encryptBlock(tempBlock, subKeys[i]);
+        }
+        return tempBlock;
     }
 
     public static byte[] encryptBlock(byte[] block, byte[][] subKeys) throws IllegalArgumentException {
@@ -312,38 +310,27 @@ public class DesEncryption {
         return ByteHelper.permutFunc(concatBlocks(left, right), inverseInitialPermutation);
     }
 
+    public static byte[] decryptBlock(byte[] block, byte[][][] reversedSubKeys) throws IllegalArgumentException {
+        return encryptBlock(block, reversedSubKeys);
+    }
+
     public static byte[] decryptBlock(byte[] block, byte[][] reversedSubKeys) throws IllegalArgumentException {
         return encryptBlock(block, reversedSubKeys);
     }
 
-    // based on http://stackoverflow.com/a/17534234
-    private static byte[][] reverseSubKeys(byte[][] subKeys) {
-        byte[][] reversedSubKeys = new byte[subKeys.length][];
+
+    private static byte[][][] reverseSubKeys(byte[][][] subKeys) {
+        byte[][][] reversedSubKeys = new byte[subKeys.length][][];
         for (int i = 0; i < subKeys.length; i++) {
-            reversedSubKeys[i] = Arrays.copyOf(subKeys[subKeys.length - 1 - i], subKeys[subKeys.length - 1 - i].length);
+            int reversedI = subKeys.length - 1 - i;
+            reversedSubKeys[reversedI] = new byte[subKeys[i].length][];
+            for (int j = 0; j < subKeys[i].length; j++) {
+                int reversedJ = subKeys[i].length - 1 - j;
+                reversedSubKeys[reversedI][reversedJ] = subKeys[i][j];
+            }
         }
         return reversedSubKeys;
     }
-
-    /*
-    private static <T> T[] reverseArray(T[] array) {
-        // reverse array (reversing list reverses array <-- http://stackoverflow.com/a/12893811)
-        Collections.reverse(Arrays.asList(array));
-        return array;
-    }
-    */
-
-    // based on http://stackoverflow.com/a/12678906
-    /*
-    private static <T> T[] reverseArray(T[] array) {
-        for (int i = 0; i < array.length / 2; i++) {
-            T temp = array[i];
-            array[i] = array[array.length - 1 - i];
-            array[array.length - 1 - i] = temp;
-        }
-        return array;
-    }
-    */
 
     // based on http://stackoverflow.com/a/784842
     private static byte[] concatBlocks(byte[] left, byte[] right) {

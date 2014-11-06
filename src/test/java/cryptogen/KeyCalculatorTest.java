@@ -78,7 +78,7 @@ public class KeyCalculatorTest {
             expectedSubKeys[i] = ByteHelper.convertBinaryStringToByteArray(expectedSubKeysStrings[i].replace(" ", ""));
         }
 
-        byte[][] subKeys = new KeyCalculator().generate(key);
+        byte[][] subKeys = new KeyCalculator().generateSubKeys(key);
 
         Arrays.stream(expectedSubKeys).forEach((bytes) -> ByteHelper.printByteArray(bytes));
         System.out.println();
