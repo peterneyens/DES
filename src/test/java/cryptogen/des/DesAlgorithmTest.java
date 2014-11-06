@@ -12,9 +12,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
- * Created by peter on 30/09/14.
+ * Created by peter
  */
-public class DesEncryptionTest {
+public class DesAlgorithmTest {
 
     @BeforeClass
     public static void setUpClass() {
@@ -57,7 +57,7 @@ public class DesEncryptionTest {
         byte[] expectedEncryptedBlock = ByteHelper.convertBinaryStringToByteArray("10000101 11101000 00010011 01010100 00001111 00001010 10110100 00000101".replace(" ", ""));
 
         try {
-            byte[] result = DesEncryption.encryptBlock(block, subKeys);
+            byte[] result = DesAlgorithm.encryptBlock(block, subKeys);
 
             System.out.println();
             System.out.println("expected vs actual result");
@@ -82,7 +82,7 @@ public class DesEncryptionTest {
         byte[] expectedEncryptedBlock = ByteHelper.convertBinaryStringToByteArray("10001111 01101000 01001111 10101111 01010101 01011010 10111011 11011001".replace(" ", ""));
 
         try {
-            byte[] result = DesEncryption.encryptBlock(block, subKeys);
+            byte[] result = DesAlgorithm.encryptBlock(block, subKeys);
 
             System.out.println();
             System.out.println("expected vs actual result");
@@ -107,7 +107,7 @@ public class DesEncryptionTest {
         byte[] expectedDecryptedBlock = ByteHelper.convertBinaryStringToByteArray("0110100001100001011011000110110001101111011011110110111101101111".replace(" ", ""));
 
         try {
-            byte[] result = DesEncryption.decryptBlock(encryptedBlock, reversedSubKeys);
+            byte[] result = DesAlgorithm.decryptBlock(encryptedBlock, reversedSubKeys);
 
             assertArrayEquals(expectedDecryptedBlock, result);
 
@@ -125,8 +125,8 @@ public class DesEncryptionTest {
 
         byte[] block = ByteHelper.convertBinaryStringToByteArray("0110100001100001011011000110110001101111011011110110111101101111".replace(" ", ""));
 
-        byte[] encrypted = DesEncryption.encryptBlock(block, subKeys);
-        byte[] decrypted = DesEncryption.decryptBlock(encrypted, reversedSubKeys);
+        byte[] encrypted = DesAlgorithm.encryptBlock(block, subKeys);
+        byte[] decrypted = DesAlgorithm.decryptBlock(encrypted, reversedSubKeys);
 
         System.out.println();
         System.out.println("expected vs actual result (testEncryptDecrypt)");
@@ -141,14 +141,12 @@ public class DesEncryptionTest {
     public void testEncryptDecrypt3Des() {
 
         byte[][][] subKeys = KeyCalculator.generateFor3Des("testKey");
-
-
         byte[][][] reversedSubKeys = reverseSubKeys(subKeys);
 
         byte[] block = ByteHelper.convertBinaryStringToByteArray("0110100001100001011011000110110001101111011011110110111101101111".replace(" ", ""));
 
-        byte[] encrypted = DesEncryption.encryptBlock(block, subKeys);
-        byte[] decrypted = DesEncryption.decryptBlock(encrypted, reversedSubKeys);
+        byte[] encrypted = DesAlgorithm.encryptBlock(block, subKeys);
+        byte[] decrypted = DesAlgorithm.decryptBlock(encrypted, reversedSubKeys);
 
         System.out.println();
         System.out.println("expected vs actual result (testEncryptDecrypt 3DES)");

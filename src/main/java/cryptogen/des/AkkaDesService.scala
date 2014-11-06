@@ -20,11 +20,11 @@ case class AllDataEncrypted
 
 
 /**
- * A DesEncryptionService can encrypt and decrypt files using the DES algorithm.
+ * A AkkaDesService can encrypt and decrypt files using the DES algorithm.
  *
  * @author Peter Neyens
  */
-object DesEncryptionService {
+object AkkaDesService {
 
   val system = ActorSystem()
   val worker = system.actorOf(
@@ -59,10 +59,10 @@ object DesEncryptionService {
      */
     def receive = {
       case EncryptBlock(block, keys, id) => {
-        sender ! EncryptedBlock(DesEncryption.encryptBlock(block, keys), id)
+        sender ! EncryptedBlock(DesAlgorithm.encryptBlock(block, keys), id)
       }
       case DecryptBlock(block, keys, id) => {
-        sender ! DecryptedBlock(DesEncryption.decryptBlock(block, keys), id)
+        sender ! DecryptedBlock(DesAlgorithm.decryptBlock(block, keys), id)
       }
     }
    
@@ -90,7 +90,7 @@ object DesEncryptionService {
     var nbTotalBlocks = 0L
     var nbBytesPadding = 0
 
-    val blockSizeInBytes = DesEncryption.blockSizeInBytes
+    val blockSizeInBytes = DesAlgorithm.blockSizeInBytes
 
     /**
      * Process received messages.

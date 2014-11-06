@@ -6,7 +6,7 @@
 package cryptogen;
 
 import cryptogen.steganography.Steganography;
-import cryptogen.des.DesEncryption;
+import cryptogen.des.*;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -214,13 +214,15 @@ public class CryptoGen extends JFrame implements ActionListener {
         } else if (e.getSource() == btnDesEncode) {
             txtConsole.append("Encrypting started!" + "\n\r");
             long before = System.currentTimeMillis();
-            DesEncryption.encryptFile(txtDesFile.getText(), txtDesKey.getText());
+            DesService des = new AsyncDesService();
+            des.encryptFile(txtDesFile.getText(), txtDesKey.getText());
             long after = System.currentTimeMillis();
             txtConsole.append("Time encrypting in milliseconds " + (after - before) + "\n\r");
         } else if (e.getSource() == btnDesDecode) {
             txtConsole.append("Decrypting started!" + "\n\r");
             long before = System.currentTimeMillis();
-            DesEncryption.decryptFile(txtDesFile.getText(), txtDesKey.getText());
+            DesService des = new AsyncDesService();
+            des.decryptFile(txtDesFile.getText(), txtDesKey.getText());
             long after = System.currentTimeMillis();
             txtConsole.append("Time decrypting in milliseconds " + (after - before) + "\n\r");
         }
