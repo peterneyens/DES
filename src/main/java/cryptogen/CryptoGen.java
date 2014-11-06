@@ -214,14 +214,16 @@ public class CryptoGen extends JFrame implements ActionListener {
         } else if (e.getSource() == btnDesEncode) {
             txtConsole.append("Encrypting started!" + "\n\r");
             long before = System.currentTimeMillis();
-            DesService des = new AsyncDesService();
+            //DesService des = new AsyncDesService();
+            DesService des = new AkkaDesService();
             des.encryptFile(txtDesFile.getText(), txtDesKey.getText());
             long after = System.currentTimeMillis();
             txtConsole.append("Time encrypting in milliseconds " + (after - before) + "\n\r");
         } else if (e.getSource() == btnDesDecode) {
             txtConsole.append("Decrypting started!" + "\n\r");
             long before = System.currentTimeMillis();
-            DesService des = new AsyncDesService();
+            //DesService des = new AsyncDesService();
+            DesService des = new AkkaDesService();
             des.decryptFile(txtDesFile.getText(), txtDesKey.getText());
             long after = System.currentTimeMillis();
             txtConsole.append("Time decrypting in milliseconds " + (after - before) + "\n\r");

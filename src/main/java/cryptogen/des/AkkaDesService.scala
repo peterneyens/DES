@@ -9,14 +9,13 @@ import akka.routing.RoundRobinPool
  * @author Peter Neyens
  */
 
-case class EncryptFile(filePath: String, subKeys: Array[Array[Byte]])
-case class DecryptFile(filePath: String, reversedSubKeys: Array[Array[Byte]])
+case class EncryptFile(filePath: String, subKeys: Array[Array[Array[Byte]]])
+case class DecryptFile(filePath: String, reversedSubKeys: Array[Array[Array[Byte]]])
 
-case class EncryptBlock(block: Array[Byte], subKeys: Array[Array[Byte]], id: Long)
-case class DecryptBlock(block: Array[Byte], subKeys: Array[Array[Byte]], id: Long)
+case class EncryptBlock(block: Array[Byte], subKeys: Array[Array[Array[Byte]]], id: Long)
+case class DecryptBlock(block: Array[Byte], subKeys: Array[Array[Array[Byte]]], id: Long)
 case class EncryptedBlock(block: Array[Byte], id: Long)
 case class DecryptedBlock(block: Array[Byte], id: Long)
-case class AllDataEncrypted
 
 
 /**
@@ -24,31 +23,36 @@ case class AllDataEncrypted
  *
  * @author Peter Neyens
  */
-object AkkaDesService {
-
-  val system = ActorSystem()
-  val worker = system.actorOf(
-    props = Props[DesEncryptionWorker].withRouter(RoundRobinPool(10)),
-    name = "desEncryptionService"
-  )
+class AkkaDesService extends AbstractDesService{
 
   /**
    * Encrypt the file with the specified file path with the specified sub keys using DES.
    */
-  def encryptFile(filePath: String, subKeys: Array[Array[Byte]]) = {
-    val actor = system.actorOf(DesEncryptionActor.props(worker))//, name = "des-encrypt-" + filePath)
+  def encryptFile(filePath: String, subKeys: Array[Array[Array[Byte]]]) = {
+    val actor = AkkaDesService.system.actorOf(AkkaDesService.DesEncryptionActor.props(AkkaDesService.worker))
     actor ! EncryptFile(filePath, subKeys)
   }
 
   /**
    * Decrypt the file with the specified file path with the specified sub keys using DES.
    */
-  def decryptFile(filePath: String, reversedSubKeys: Array[Array[Byte]]) = {
-    val actor = system.actorOf(DesEncryptionActor.props(worker))//, name = "des-decrypt-" + filePath)
+  def decryptFile(filePath: String, reversedSubKeys: Array[Array[Array[Byte]]]) = {
+    val actor = AkkaDesService.system.actorOf(AkkaDesService.DesEncryptionActor.props(AkkaDesService.worker))
     actor ! DecryptFile(filePath, reversedSubKeys)
   }
   
-  
+}
+
+
+object AkkaDesService {
+
+  val system = ActorSystem()
+  // start a roundrobin router with 10 workers
+  val worker = system.actorOf(
+    props = Props[DesEncryptionWorker].withRouter(RoundRobinPool(10)),
+    name = "desEncryptionService"
+  )
+
   /**
    * Working actor which encrypts/decrypts blocks.
    */
@@ -58,11 +62,19 @@ object AkkaDesService {
      * Process received messages.
      */
     def receive = {
+      // encrypt the block
       case EncryptBlock(block, keys, id) => {
-        sender ! EncryptedBlock(DesAlgorithm.encryptBlock(block, keys), id)
+        val encrypted = keys.foldLeft(block){ (block, subkeys) => 
+          DesAlgorithm.encryptBlock(block, subkeys)
+        }
+        sender ! EncryptedBlock(encrypted, id)
       }
+      // decrypt the block
       case DecryptBlock(block, keys, id) => {
-        sender ! DecryptedBlock(DesAlgorithm.decryptBlock(block, keys), id)
+        val decrypted = keys.foldLeft(block){ (block, subkeys) => 
+          DesAlgorithm.decryptBlock(block, subkeys)
+        }
+        sender ! DecryptedBlock(decrypted, id)
       }
     }
    
@@ -100,13 +112,12 @@ object AkkaDesService {
       case DecryptFile(filePath, subKeys) => decryptFile(filePath, subKeys)
       case EncryptedBlock(block, id) => processEncryptedBlock(block, id)
       case DecryptedBlock(block, id) => processDecryptedBlock(block, id)
-      case AllDataEncrypted => writeAllDataToFile
     }
 
     /**
      * Encrypt the file with the specified file path using the specified sub keys.
      */
-    private def encryptFile(filePath: String, subKeys: Array[Array[Byte]]) = {
+    private def encryptFile(filePath: String, subKeys: Array[Array[Array[Byte]]]) = {
       val inputFile = new File(filePath)
       val inputStream = new BufferedInputStream(new FileInputStream(inputFile))
       val outputFile = new File(filePath + ".des")
@@ -134,7 +145,7 @@ object AkkaDesService {
     /**
      * Decrypt the file with the specified file path using the specified sub keys.
      */
-    private def decryptFile(filePath: String, subKeys: Array[Array[Byte]]) = {
+    private def decryptFile(filePath: String, subKeys: Array[Array[Array[Byte]]]) = {
       val inputFile = new File(filePath)
       val inputStream = new BufferedInputStream(new FileInputStream(inputFile))
       val outputFile = new File(filePath.replace(".des", ".decrypt"))
@@ -172,10 +183,11 @@ object AkkaDesService {
     private def processBlock(block: Array[Byte], id: Long, encryption: Boolean) =  {
       // delete padding from last block if decrypting
       (encryption, nbTotalBlocks) match {
-        case (false, `id`)  => {
+        // last block when decrypting
+        case (false, `id`)  => 
           val blockWithoutPadding = block.slice(0, blockSizeInBytes - nbBytesPadding)
           (blockWithoutPadding, id) +=: encryptedBlocks
-        }
+        // every other block 
         case _ => (block, id) +=: encryptedBlocks
       }
 
@@ -188,7 +200,7 @@ object AkkaDesService {
 
       // all blocks are encrypted/decrypted
       if (encryptedBlocks.length == nbTotalBlocks) {
-        self ! AllDataEncrypted
+        writeAllDataToFile
       }
     }
     
