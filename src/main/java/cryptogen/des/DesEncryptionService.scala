@@ -1,4 +1,4 @@
-package cryptogen
+package cryptogen.des
 
 import java.io._
 import akka.actor._

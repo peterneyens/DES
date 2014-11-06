@@ -1,4 +1,4 @@
-package cryptogen;
+package cryptogen.des;
 
 import helpers.ByteHelper;
 import org.junit.*;
@@ -78,7 +78,7 @@ public class KeyCalculatorTest {
             expectedSubKeys[i] = ByteHelper.convertBinaryStringToByteArray(expectedSubKeysStrings[i].replace(" ", ""));
         }
 
-        byte[][] subKeys = new KeyCalculator().generateSubKeys(key);
+        byte[][] subKeys = KeyCalculator.generateSubKeys(key);
 
         Arrays.stream(expectedSubKeys).forEach((bytes) -> ByteHelper.printByteArray(bytes));
         System.out.println();

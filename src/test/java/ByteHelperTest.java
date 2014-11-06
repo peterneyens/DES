@@ -4,7 +4,6 @@
  * and open the template in the editor.
  */
 import helpers.ByteHelper;
-import cryptogen.Feistel;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -19,14 +18,12 @@ import static org.junit.Assert.assertEquals;
  */
 public class ByteHelperTest {
     
-    private static Feistel f;
     
     public ByteHelperTest() {
     }
     
     @BeforeClass
     public static void setUpClass() {
-        f = new Feistel();
     }
     
     @AfterClass

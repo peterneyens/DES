@@ -1,4 +1,4 @@
-package cryptogen;
+package cryptogen.des;
 
 import helpers.ByteHelper;
 import org.junit.*;

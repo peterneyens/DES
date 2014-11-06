@@ -6,6 +6,7 @@
 package cryptogen;
 
 import cryptogen.stenagography.Stenagography;
+import cryptogen.des.DesEncryption;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
