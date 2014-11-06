@@ -5,7 +5,7 @@
  */
 package cryptogen;
 
-import cryptogen.stenagography.Stenagography;
+import cryptogen.steganography.Steganography;
 import cryptogen.des.DesEncryption;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -36,10 +36,10 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class CryptoGen extends JFrame implements ActionListener {
 
-    private JTextField txtDesFile, txtDesKey, txtStenagoImage;
+    private JTextField txtDesFile, txtDesKey, txtSteganoImage;
     private JButton btnDesEncode, btnDesDecode, btnDesFile,
-                    btnStenagoEncode, btnStenagoDecode, btnStenagoImage;
-    private JTextArea txtStenagoText, txtConsole;
+                    btnSteganoEncode, btnSteganoDecode, btnSteganoImage;
+    private JTextArea txtSteganoText, txtConsole;
 
     public CryptoGen() {
         initGui();
@@ -98,47 +98,47 @@ public class CryptoGen extends JFrame implements ActionListener {
         pMain.add(pDes, BorderLayout.WEST);
 
         //paneel stenagografie aanmaken
-        JPanel pStenago = new JPanel(new GridBagLayout());
-        pStenago.setBorder(BorderFactory.createTitledBorder("Stenagography"));
+        JPanel pStegano = new JPanel(new GridBagLayout());
+        pStegano.setBorder(BorderFactory.createTitledBorder("Steganography"));
 
-        //compontenten toevoegen aan Stenago paneel
+        //compontenten toevoegen aan Stegano paneel
         gbc.gridx = 0;
         gbc.gridy = 0;
-        pStenago.add(new JLabel("Text:"), gbc);
+        pStegano.add(new JLabel("Text:"), gbc);
         gbc.gridx = 0;
         gbc.gridy = 1;
-        pStenago.add(new JLabel("Image:"), gbc);
+        pStegano.add(new JLabel("Image:"), gbc);
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        txtStenagoText = new JTextArea(5, 25);
+        txtSteganoText = new JTextArea(5, 25);
         Border border = BorderFactory.createLineBorder(Color.BLACK);
-        JScrollPane spStenago = new JScrollPane(txtStenagoText);
-        txtStenagoText.setBorder(border);
-        pStenago.add(spStenago, gbc);
+        JScrollPane spStegano = new JScrollPane(txtSteganoText);
+        txtSteganoText.setBorder(border);
+        pStegano.add(spStegano, gbc);
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.gridwidth = 1;
-        txtStenagoImage = new JTextField(10);
-        pStenago.add(txtStenagoImage, gbc);
+        txtSteganoImage = new JTextField(10);
+        pStegano.add(txtSteganoImage, gbc);
         gbc.gridx = 2;
         gbc.gridy = 1;
-        btnStenagoImage = new JButton("Select Image");
-        btnStenagoImage.addActionListener(this);
-        pStenago.add(btnStenagoImage, gbc);
+        btnSteganoImage = new JButton("Select Image");
+        btnSteganoImage.addActionListener(this);
+        pStegano.add(btnSteganoImage, gbc);
         gbc.gridx = 1;
         gbc.gridy = 3;
-        btnStenagoDecode = new JButton("Start Decryption");
-        btnStenagoDecode.addActionListener(this);
-        pStenago.add(btnStenagoDecode, gbc);
+        btnSteganoDecode = new JButton("Start Decryption");
+        btnSteganoDecode.addActionListener(this);
+        pStegano.add(btnSteganoDecode, gbc);
         gbc.gridx = 2;
         gbc.gridy = 3;
-        btnStenagoEncode = new JButton("Start Encryption");
-        btnStenagoEncode.addActionListener(this);
-        pStenago.add(btnStenagoEncode, gbc);
+        btnSteganoEncode = new JButton("Start Encryption");
+        btnSteganoEncode.addActionListener(this);
+        pStegano.add(btnSteganoEncode, gbc);
 
         //stenago paneel toevoegen aan frame
-        pMain.add(pStenago, BorderLayout.EAST);
+        pMain.add(pStegano, BorderLayout.EAST);
 
         //console venster maken
         gbc.gridx = 0;
@@ -168,7 +168,7 @@ public class CryptoGen extends JFrame implements ActionListener {
             if (fch.getSelectedFile() != null) {
                 txtDesFile.setText(fch.getSelectedFile().getAbsolutePath());
             }
-        } else if (e.getSource() == btnStenagoImage) {
+        } else if (e.getSource() == btnSteganoImage) {
             //create file choose window
             JFileChooser fch = new JFileChooser();
             fch.setAcceptAllFileFilterUsed(false);
@@ -178,17 +178,17 @@ public class CryptoGen extends JFrame implements ActionListener {
 
             //check of een file is geselecteerd
             if (fch.getSelectedFile() != null) {
-                txtStenagoImage.setText(fch.getSelectedFile().getAbsolutePath());
+                txtSteganoImage.setText(fch.getSelectedFile().getAbsolutePath());
             }
-        } else if (e.getSource() == btnStenagoEncode) {
+        } else if (e.getSource() == btnSteganoEncode) {
             //set Console window
-            Stenagography.console = txtConsole;
-            Stenagography.DEBUG = true;
+            Steganography.console = txtConsole;
+            Steganography.DEBUG = true;
 
             txtConsole.append("Encoding started!" + "\n\r");
 
             //start encoding
-            BufferedImage img = Stenagography.encode(txtStenagoImage.getText(), txtStenagoText.getText());
+            BufferedImage img = Steganography.encode(txtSteganoImage.getText(), txtSteganoText.getText());
             JFileChooser fch = new JFileChooser();
 
             int returnVal = fch.showSaveDialog(this);
@@ -197,18 +197,18 @@ public class CryptoGen extends JFrame implements ActionListener {
                 writeImage(fch.getSelectedFile().getAbsolutePath(), "bmp", img);
             }
 
-            txtStenagoText.setText("");
+            txtSteganoText.setText("");
             
             txtConsole.append("Encoding finished!" + "\n\r");
-        } else if (e.getSource() == btnStenagoDecode) {
-            Stenagography.console = txtConsole;
-            Stenagography.DEBUG = true;
+        } else if (e.getSource() == btnSteganoDecode) {
+            Steganography.console = txtConsole;
+            Steganography.DEBUG = true;
             
             txtConsole.append("Decoding started!" + "\n\r");
             
-            String str = Stenagography.decode(txtStenagoImage.getText());
+            String str = Steganography.decode(txtSteganoImage.getText());
             
-            txtStenagoText.setText(str);
+            txtSteganoText.setText(str);
             
             txtConsole.append("Decoding finished!" + "\n\r");
         } else if (e.getSource() == btnDesEncode) {

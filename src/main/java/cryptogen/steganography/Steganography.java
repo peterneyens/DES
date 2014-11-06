@@ -1,9 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package cryptogen.stenagography;
+package cryptogen.steganography;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
@@ -19,7 +14,7 @@ import javax.swing.JTextArea;
  *
  * @author Cornel
  */
-public class Stenagography {
+public class Steganography {
 
     public static JTextArea console;
     public static boolean DEBUG = false;
