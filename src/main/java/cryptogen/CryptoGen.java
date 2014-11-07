@@ -41,8 +41,9 @@ public class CryptoGen extends JFrame implements ActionListener {
                     btnSteganoEncode, btnSteganoDecode, btnSteganoImage;
     private JTextArea txtSteganoText, txtConsole;
 
-    //private DesService des = new AsyncDesService();
-    private DesService des = new AkkaDesService();
+    //private DesService des = new SyncDesService();
+    private DesService des = new AsyncDesService();
+    //private DesService des = new AkkaDesService();
     //private DesService des = new DistributedDesService();
     
     public CryptoGen() {

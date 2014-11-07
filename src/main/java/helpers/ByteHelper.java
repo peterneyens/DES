@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package helpers;
 
 import java.math.BigInteger;
@@ -10,7 +5,7 @@ import java.util.Arrays;
 
 /**
  *
- * @author arno
+ * @author Arno, Nick, Peter
  */
 public class ByteHelper {
 
@@ -134,4 +129,13 @@ public class ByteHelper {
         }
         return bytes;
     }
+
+    // based on http://stackoverflow.com/a/784842
+    public static byte[] concatBlocks(byte[] left, byte[] right) {
+        byte[] result = Arrays.copyOf(left, left.length + right.length);
+        System.arraycopy(right, 0, result, left.length, right.length);
+        return result;
+    }
+
 }
+

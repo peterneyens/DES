@@ -1,21 +1,24 @@
 package cryptogen.des;
 
 import helpers.ByteHelper;
-
-import java.io.*;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.*;
 
 /**
+ * DesAlgorithm includes methods to encrypt and decrypt blocks of data.
+ * If you supply more than one sequence of subkeys, the blocks are encrypted or decrypted
+ * multiple types.
+ * eg. for 3DES, supply 3 sequences of subkeys.
+ *
  * @author Peter.
  */
 public class DesAlgorithm {
 
+    /**
+     * The number of bytes in one block.
+     */
     public static final int blockSizeInBytes = 8;
 
+    // IP matrix
     private static final int[] initialPermutation = new int[] {
         58, 50, 42, 34, 26, 18, 10, 2,
         60, 52, 44, 36, 28, 20, 12, 4,
@@ -27,6 +30,7 @@ public class DesAlgorithm {
         63, 55, 47, 39, 31, 23, 15, 7
     };
 
+    // IP-1 matrix
     private static final int[] inverseInitialPermutation = new int[] {
         40, 8, 48, 16, 56, 24, 64, 32,
         39, 7, 47, 15, 55, 23, 63, 31,
@@ -38,6 +42,12 @@ public class DesAlgorithm {
         33, 1, 41, 9, 49, 17, 57, 25
     };
 
+    /**
+     * Encrypt the specified block multiple times based on the length of the specified subkeys.
+     * 
+     * @param block the block of data to be encrypted
+     * @param subkeys the subkeys used to encrypt the block
+     */
     public static byte[] encryptBlock(byte[] block, byte[][][] subKeys) throws IllegalArgumentException {
         byte[] tempBlock = block;
         for (int i = 0; i < subKeys.length; i++) {
@@ -46,29 +56,29 @@ public class DesAlgorithm {
         return tempBlock;
     }
 
+    /**
+     * Encrypt the specified block one time using the specified subkeys.
+     * 
+     * @param block the block of data to be encrypted
+     * @param subkeys the subkeys used to encrypt the block
+     */
     public static byte[] encryptBlock(byte[] block, byte[][] subKeys) throws IllegalArgumentException {
         if (block.length != 8)
             throw new IllegalArgumentException("Block not 8 length");
 
-        //long millis1 = System.nanoTime();
         final byte[] permutatedBlock = ByteHelper.permutFunc(block, initialPermutation);
-        //long millis2 = System.nanoTime();
-        //System.out.println("Time permutation " + (millis2 - millis1));
 
         byte[] prevLeft, prevRight, left, right;
         // verdeel in initiele linkse en rechtse blok
         prevLeft = Arrays.copyOfRange(permutatedBlock, 0, (int) Math.ceil(permutatedBlock.length / 2.0));
         prevRight = Arrays.copyOfRange(permutatedBlock, permutatedBlock.length / 2, permutatedBlock.length);
 
-        // bereken L1 R1 tem L15 R15
+        // bereken L1 R1 tem L16 R16
         for (int i = 1; i <= 16; i++) {
 
             // bereken linkse en rechtse blok
             left = prevRight;
-
-            //long millisBeforeXorFeistel = System.nanoTime();
             right = ByteHelper.xorByteBlocks(prevLeft, Feistel.executeFunction(prevRight, subKeys[i - 1]));
-            //System.out.println("time xor feistel " + (System.nanoTime() - millisBeforeXorFeistel));
 
             // voorbereiding volgende iteratie
             prevLeft = left;
@@ -79,21 +89,33 @@ public class DesAlgorithm {
         left = prevRight;
         right = prevLeft;
 
-        //long millis3 = System.nanoTime();
-        //System.out.println("Time iterations " + (millis3 - millis2));
-
-        return ByteHelper.permutFunc(concatBlocks(left, right), inverseInitialPermutation);
+        return ByteHelper.permutFunc(ByteHelper.concatBlocks(left, right), inverseInitialPermutation);
     }
 
+ 
+     /**
+     * Decrypt the specified block multiple times based on the length of the specified subkeys.
+     * 
+     * @precondition the subkeys should the reversed subkeys used to encrypt.
+     * @param block the block of data to be decrypted
+     * @param subkeys the subkeys used to decrypt the block
+     */
     public static byte[] decryptBlock(byte[] block, byte[][][] reversedSubKeys) throws IllegalArgumentException {
         return encryptBlock(block, reversedSubKeys);
     }
 
+     /**
+     * Decrypt the specified block one time using the specified subkeys.
+     * 
+     * @precondition the subkeys should the reversed subkeys used to encrypt.
+     * @param block the block of data to be decrypted
+     * @param subkeys the subkeys used to decrypt the block
+     */
     public static byte[] decryptBlock(byte[] block, byte[][] reversedSubKeys) throws IllegalArgumentException {
         return encryptBlock(block, reversedSubKeys);
     }
 
-
+    /*
     private static byte[][][] reverseSubKeys(byte[][][] subKeys) {
         byte[][][] reversedSubKeys = new byte[subKeys.length][][];
         for (int i = 0; i < subKeys.length; i++) {
@@ -106,11 +128,6 @@ public class DesAlgorithm {
         }
         return reversedSubKeys;
     }
+    */
 
-    // based on http://stackoverflow.com/a/784842
-    private static byte[] concatBlocks(byte[] left, byte[] right) {
-        byte[] result = Arrays.copyOf(left, left.length + right.length);
-        System.arraycopy(right, 0, result, left.length, right.length);
-        return result;
-    }
 }

@@ -68,23 +68,6 @@ object DistributedDesService {
   val workMasterRef = Await.result(workMasterFut, timeout.duration).asInstanceOf[ActorRef]
 
   /**
-   * Encrypt the file with the specified file path with the specified sub keys using DES.
-   */
-  //def encryptFile(filePath: String, subKeys: Array[Array[Byte]]) = {
-  //  val actor = system.actorOf(DesEncryptionActor.props(workMasterRef))
-  //  actor ! EncryptFile(filePath, subKeys)
-  //}
-
-  /**
-   * Decrypt the file with the specified file path with the specified sub keys using DES.
-   */
-  //def decryptFile(filePath: String, reversedSubKeys: Array[Array[Byte]]) = {
-  //  val actor = system.actorOf(DesEncryptionActor.props(workMasterRef))
-  //  actor ! DecryptFile(filePath, reversedSubKeys)
-  //}
-  
-  
-  /**
    * Working actor which encrypts/decrypts blocks.
    */
   class DesEncryptionWorker extends Worker {

@@ -39,23 +39,43 @@ public class KeyCalculator {
     private static int[] iteraties = new int[]{1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
 
 
-    // returns an array of subkeys (a subkey is a byte array)
+    /**
+     * Generate the subkeys for a DES encryption using the specified key.
+     *
+     * @param key string for which the subkeys will be generated
+     * @return an array of length 1 with an array of subkeys (a subkey is a byte array)
+     */
     public static byte[][][] generate(String key) {
-        //byte[] keyInBytes = Arrays.copyOfRange(createHash(key), 0, 8);
-        //return new byte[][][] { generateSubKeys(keyInBytes) };
         return generateForNDes(key, 1);
     }
 
+    /**
+     * Generate the subkeys for a 3DES encryption using the specified key.
+     *
+     * @param key string for which the subkeys will be generated
+     * @return an array of length 3 with arrays of subkeys (a subkey is a byte array)
+     */
     public static byte[][][] generateFor3Des(String key) {
         return generateForNDes(key, 3);
     }
 
+    /**
+     * Generate n subkeys for an n-DES encryption using the specified key.
+     *
+     * @param key string for which the subkeys will be generated
+     * @param nDes number of arrays with subkeys
+     * @return an array of length n with n arrays of subkeys (a subkey is a byte array)
+     */
     public static byte[][][] generateForNDes(String key, int nDes) {
+        // hash the master key to create longer keys and to minimalize the chance
+        // of weak keys and as a consequence a weak encryption
         byte[] hash = createHash(key);
       
-        if (nDes > (hash.length / 8)) 
-            throw new IllegalArgumentException("nDes to big for hashed key");
+        // nDes cannot be too big
+        // every generation of subkeys needs a key of 8 bytes
+        nDes =  Math.max(nDes, (hash.length / 8)); 
 
+        //  generate nDes times 16 subkeys
         byte[][][] subKeysNDes = new byte[nDes][][];
         for (int i = 0; i < nDes; i++) {
             subKeysNDes[i] = generateSubKeys(Arrays.copyOfRange(hash, i, i + 8));
@@ -64,6 +84,12 @@ public class KeyCalculator {
         return subKeysNDes;
     }
 
+    /**
+     * Return a byte array of the hashed specified text.
+     *
+     * @param text the text to be hashed.
+     * @return byte[] byte array of the hashed text.
+     */
     private static byte[] createHash(String text) {
         try {
             return MessageDigest.getInstance("SHA-256").digest(text.getBytes(Charset.forName("UTF-8")));
@@ -73,44 +99,108 @@ public class KeyCalculator {
         }
     }
 
-    
-    // maakt de keys aan
-    public static byte[][] generateSubKeys(byte[] sourceCD) {
+    /**
+     * Generate the subkeys for the specified key.
+     *
+     * @param key the key to generate the subkeys.
+     * @return byte[][] the subkeys for the specified key.
+     */
+    public static byte[][] generateSubKeys(byte[] key) {
+        byte[] sourceCD = key;
 
         // Splitst de source array in twee tabellen (C, D)
-        //byte[] permutatedBlock = ByteHelper.permutate(sourceCD, permutatieTabel1);
         byte[] permutatedBlock = ByteHelper.permutFunc(sourceCD, permutatieTabel1);
-
-        byte[] C = Arrays.copyOfRange(permutatedBlock, 0,(int) Math.ceil(permutatedBlock.length / 2.0));
-        byte[] D = Arrays.copyOfRange(permutatedBlock, permutatedBlock.length / 2, permutatedBlock.length);
-        D = ByteHelper.rotateLeft(D, 32, 4); // move 4 bits to left
+        byte[] C = getFirstHalf(permutatedBlock);
+        byte[] D = getSecondHalf(permutatedBlock);
 
         //Array om de keys in op te slaan
         byte[][] keys = new byte[16][6];
 
         // bereken alle subkeys
         for (int i = 0; i < iteraties.length; i++) {
-
             //Voer de benodigde left shifts uit
             C = ByteHelper.rotateLeft(C, 28, iteraties[i]);
             D = ByteHelper.rotateLeft(D, 28, iteraties[i]);
 
             //Voeg C en D terug samen
-            byte[] CD = new byte[7];
-            // get 28 first bits from C
-            for(int bit = 0; bit < 28; bit++) {
-                ByteHelper.setBit(CD, bit, ByteHelper.getBitInt(C, bit));
-            }
-            // get 28 next bits from D
-            for(int bit = 28; bit < 56; bit++) {
-                ByteHelper.setBit(CD, bit, ByteHelper.getBitInt(D, bit - 28));
-            }
+            byte[] CD = combineCD(C, D); 
 
             keys[i] = ByteHelper.permutFunc(CD, permutatieTabel2);
         }
 
-        // TODO check keyInBytes niet 00000000 of 111111111, of subkeys vaak gelijk, ...
-
+        // TODO check key niet 00000000 of 111111111, of subkeys vaak gelijk, ...
         return keys;
     }
+
+    /**
+     * Get the first half of the specified block.
+     * The significant bits are on the left.
+     * eg. when a block with an odd length is split in half, only the first 4 bits
+     * of the last byte are significant.
+     *
+     * @param block the block to be split in half
+     * @return byte[] the first half of the specified block
+     */
+    private static byte[] getFirstHalf(byte[] block) {
+        return Arrays.copyOfRange(block, 0, (int) Math.ceil(block.length / 2.0));
+    }
+
+    /**
+     * Get the second half of the specified block.
+     * The significant bits are on the left.
+     * eg. when a block with an odd length is split in half, only the first 4 bits
+     * of the last byte are significant.
+     *
+     * @param block the block to be split in half
+     * @return byte[] the first half of the specified block
+     */
+    private static byte[] getSecondHalf(byte[] block) {
+        byte[] temp = Arrays.copyOfRange(block, block.length / 2, block.length);
+        // middle of block is in the middle of a byte
+        if ( (block.length / 2d) % 1 == 0.5) {
+            temp = ByteHelper.rotateLeft(temp, temp.length * 8, 4);
+        }
+        return temp;
+    }
+
+    /**
+     * Combine blocks C and D.
+     *
+     * @param C
+     * @param C
+     * @return CD
+     */
+    private static byte[] combineCD(byte[] C, byte[] D) {
+        byte[] CD = new byte[7];
+        // get 28 first bits from C
+        for(int bit = 0; bit < 28; bit++) {
+            ByteHelper.setBit(CD, bit, ByteHelper.getBitInt(C, bit));
+        }
+        // get 28 next bits from D
+        for(int bit = 28; bit < 56; bit++) {
+            ByteHelper.setBit(CD, bit, ByteHelper.getBitInt(D, bit - 28));
+        }
+        return CD;
+    }
+
+    /**
+     * Reverse the specified subkeys for decryption.
+     * The subkeys are reversed in the first and the second dimension.
+     *
+     * @param subKeys the subkey which need to be reversed to use with DES decryption.
+     * @return byte[][][] the reversed subkeys that can be used for decryption.
+     */
+    public static byte[][][] reverseSubKeys(byte[][][] subKeys) {
+        byte[][][] reversedSubKeys = new byte[subKeys.length][][];
+        for (int i = 0; i < subKeys.length; i++) {
+            int reversedI = subKeys.length - 1 - i;
+            reversedSubKeys[reversedI] = new byte[subKeys[i].length][];
+            for (int j = 0; j < subKeys[i].length; j++) {
+                int reversedJ = subKeys[i].length - 1 - j;
+                reversedSubKeys[reversedI][reversedJ] = subKeys[i][j];
+            }
+        }
+        return reversedSubKeys;
+    }
+
 }
