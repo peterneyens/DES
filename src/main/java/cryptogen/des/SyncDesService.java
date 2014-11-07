@@ -1,28 +1,16 @@
 package cryptogen.des;
 
-import helpers.ByteHelper;
-
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author Peter.
  */
 public class SyncDesService extends AbstractDesService {
 
+    private static final int BLOCK_SIZE_IN_BYTES = DesAlgorithm.blockSizeInBytes;
+
     public void encryptFile(String filePath, byte[][][] subKeys) {
-        throw new UnsupportedOperationException();
-    }
-
-    public void decryptFile(String filePath, byte[][][] reversedSubKeys) {
-        throw new UnsupportedOperationException();
-    }
-
-  /*
-    private static void encryptFile(String filePath, byte[][] subKeys) {
         System.out.println();
         System.out.println("Encrypting");
 
@@ -33,26 +21,26 @@ public class SyncDesService extends AbstractDesService {
             final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 
             final long nbBytesFile = inputFile.length();
-            final long nbTotalBlocks = (long) Math.ceil(nbBytesFile / (double) blockSizeInBytes);
-            final int nbBytesPaddingNeeded = (int) (blockSizeInBytes - (nbBytesFile % blockSizeInBytes));
+            final long nbTotalBlocks = (long) Math.ceil(nbBytesFile / (double) BLOCK_SIZE_IN_BYTES);
+            final int nbBytesPaddingNeeded = (int) (BLOCK_SIZE_IN_BYTES - (nbBytesFile % BLOCK_SIZE_IN_BYTES));
 
             final byte header = (byte) nbBytesPaddingNeeded;
             outputStream.write(header);
 
-            byte[] block = new byte[blockSizeInBytes];
+            byte[] block = new byte[BLOCK_SIZE_IN_BYTES];
             int bytesRead = 0;
 
             for (long nbBlocks = 1; nbBlocks <= nbTotalBlocks; nbBlocks++) {
 
                 bytesRead = inputStream.read(block);
 
-                System.out.println("Encrypting block " + nbBlocks);
-                byte[] encryptedBlock = encryptBlock(block, subKeys);
+                //System.out.println("Encrypting block " + nbBlocks);
+                byte[] encryptedBlock = DesAlgorithm.encryptBlock(block, subKeys);
 
                 // schrijf geencrypteerd blok weg naar output bestand
                 outputStream.write(encryptedBlock);
 
-                block = new byte[blockSizeInBytes];
+                block = new byte[BLOCK_SIZE_IN_BYTES];
             }
 
             inputStream.close();
@@ -66,7 +54,7 @@ public class SyncDesService extends AbstractDesService {
         }
     }
 
-    private static void decryptFile(String filePath, byte[][] reversedSubKeys) {
+    public void decryptFile(String filePath, byte[][][] reversedSubKeys) {
         System.out.println();
         System.out.println("Decrypting");
 
@@ -77,26 +65,26 @@ public class SyncDesService extends AbstractDesService {
             final OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
 
             final long nbBytesFileWithoutHeader = inputFile.length() - 1;
-            final long nbTotalBlocks = (long) Math.ceil(nbBytesFileWithoutHeader / (double) blockSizeInBytes);
+            final long nbTotalBlocks = (long) Math.ceil(nbBytesFileWithoutHeader / (double) BLOCK_SIZE_IN_BYTES);
             final int nbBytesHeading = inputStream.read();
 
-            byte[] block = new byte[blockSizeInBytes];
+            byte[] block = new byte[BLOCK_SIZE_IN_BYTES];
             for (long nbBlocks = 1; nbBlocks <= nbTotalBlocks; nbBlocks++) {
                 inputStream.read(block);
 
-                System.out.println("Decrypting block " + nbBlocks);
-                byte[] decryptedBlock = decryptBlock(block, reversedSubKeys);
+                //System.out.println("Decrypting block " + nbBlocks);
+                byte[] decryptedBlock = DesAlgorithm.decryptBlock(block, reversedSubKeys);
 
                 // schrijf geencrypteerd blok weg naar output bestand
                 // laatste blok => verwijder padding
                 if (nbBlocks == nbTotalBlocks) {
-                    byte[] blockWithoutPadding = Arrays.copyOfRange(decryptedBlock, 0, blockSizeInBytes - nbBytesHeading);
+                    byte[] blockWithoutPadding = Arrays.copyOfRange(decryptedBlock, 0, BLOCK_SIZE_IN_BYTES - nbBytesHeading);
                     outputStream.write(blockWithoutPadding);
                 } else {
                     outputStream.write(decryptedBlock);
                 }
 
-                block = new byte[blockSizeInBytes];
+                block = new byte[BLOCK_SIZE_IN_BYTES];
             }
 
             inputStream.close();
@@ -109,6 +97,5 @@ public class SyncDesService extends AbstractDesService {
             e.printStackTrace();
         }
     }
-    */
 
 }
