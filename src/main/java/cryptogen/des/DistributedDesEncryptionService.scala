@@ -46,7 +46,7 @@ object DistributedDesService {
   val port = "2551"
   val config = ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$port").
     withFallback(ConfigFactory.parseString("akka.cluster.roles = [compute]")).
-    withFallback(ConfigFactory.load())
+    withFallback(ConfigFactory.load("cluster"))
 
   val system = ActorSystem("ClusterSystem", config)
 

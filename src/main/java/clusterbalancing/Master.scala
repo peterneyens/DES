@@ -13,6 +13,7 @@ import akka.contrib.pattern.ClusterSingletonProxy
 import akka.routing.FromConfig
 import com.typesafe.config.ConfigFactory
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 
 class Master[T <: Worker : ClassTag] extends Actor with ActorLogging {
   import MasterWorkerProtocol._
@@ -103,7 +104,7 @@ object Node {
   def startup(port: String) = {  
     val config = ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$port").
       withFallback(ConfigFactory.parseString("akka.cluster.roles = [compute]")).
-      withFallback(ConfigFactory.load())
+      withFallback(ConfigFactory.load("cluster"))
   
     val system = ActorSystem("ClusterSystem", config)
 
