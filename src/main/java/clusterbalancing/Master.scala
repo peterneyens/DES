@@ -14,12 +14,13 @@ import akka.routing.FromConfig
 import com.typesafe.config.ConfigFactory
 import scala.concurrent.duration._
 
-class Master extends Actor with ActorLogging {
+class Master[T <: Worker : ClassTag] extends Actor with ActorLogging {
   import MasterWorkerProtocol._
   import scala.collection.mutable.{Map, Queue}
 
-  val workerRouter = context.actorOf(FromConfig.props(Props[cryptogen.des.DistributedDesService.DesEncryptionWorker]),
-    name = "workerRouter")
+//  val workerRouter = context.actorOf(FromConfig.props(Props[cryptogen.des.DistributedDesService.DesEncryptionWorker]), 
+//    name = "workerRouter")
+  val workerRouter = context.actorOf(Props[T].withRouter(FromConfig()), name = "workerRouter")
 
   // Holds known workers and what they may be working on
   val workers = Map.empty[ActorRef, Option[Tuple2[ActorRef, Any]]]
@@ -91,7 +92,9 @@ class Master extends Actor with ActorLogging {
   }
 }
 
-object Master {
+object Node {
+  import cryptogen.des.DistributedDesService.DesEncryptionWorker
+  import scala.reflect.ClassTag
 
   def main(args: Array[String]): Unit = {
     startup(args.headOption.getOrElse("0")) 
@@ -105,7 +108,7 @@ object Master {
     val system = ActorSystem("ClusterSystem", config)
 
     system.actorOf(ClusterSingletonManager.props(
-      singletonProps = Props[Master],
+      singletonProps = Props(classOf[Master[DesEncryptionWorker]], implicitly[ClassTag[DesEncryptionWorker]]),//Props[Master[cryptogen.des.DistributedDesService.DesEncryptionWorker]],
       singletonName = "workMaster",
       terminationMessage = PoisonPill,
       role = Some("compute")

@@ -1,11 +1,11 @@
 package cryptogen.des
 
 import java.io._
-import akka.actor._
 import language.postfixOps
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 import akka.actor._
 import akka.actor.ActorRef
 import akka.pattern.pipe
@@ -51,7 +51,7 @@ object DistributedDesService {
   val system = ActorSystem("ClusterSystem", config)
 
   system.actorOf(ClusterSingletonManager.props(
-    singletonProps = Props[Master],
+    singletonProps = Props(classOf[Master[DesEncryptionWorker]], implicitly[ClassTag[DesEncryptionWorker]]),
     singletonName = "workMaster",
     terminationMessage = PoisonPill,
     role = Some("compute")
