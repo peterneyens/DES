@@ -1,14 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package cryptogen;
 
 import cryptogen.steganography.Steganography;
 import cryptogen.des.*;
+import helpers.ConsoleHelper;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -22,38 +17,43 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JCheckBox;
 import javax.swing.JTextField;
-import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  *
- * @author cornel
+ * @author Cornel, Nick, Arno, Peter
  */
 public class CryptoGen extends JFrame implements ActionListener {
-
-    private JTextField txtDesFile, txtDesKey, txtSteganoImage;
-    private JButton btnDesEncode, btnDesDecode, btnDesFile,
-                    btnSteganoEncode, btnSteganoDecode, btnSteganoImage;
-    private JTextArea txtSteganoText, txtConsole;
 
     //private DesService des = new SyncDesService();
     //private DesService des = new AsyncDesService();
     private DesService des = new AkkaDesService();
     //private DesService des = new DistributedDesService();
     
+    private JTextField txtDesDecryptedFile, txtDesEncryptedFile, txtDesKey, txtSteganoImage,
+            txtSteganoFile, txtSteganoOutputImage;
+    private JButton btnDesEncode, btnDesDecode, btnDesFile, btnDesOutputFile,
+            btnSteganoEncode, btnSteganoDecode, btnSteganoImage, btnSteganoFile, btnSteganoOutputImage;
+    private JTextArea txtConsole;
+    private JCheckBox cbUse3des;
+
     public CryptoGen() {
         initGui();
+        
+        pack();
+        setResizable(false);
+        setVisible(true);
     }
 
     public void initGui() {
         //configureren JFrame
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setTitle("DES Program");
+        this.setTitle("Crypto Generator");
 
         //hoofdpaneel aanmaken
         JPanel pMain = new JPanel(new BorderLayout());
@@ -68,79 +68,118 @@ public class CryptoGen extends JFrame implements ActionListener {
         JPanel pDes = new JPanel(new GridBagLayout());
         pDes.setBorder(BorderFactory.createTitledBorder("DES"));
 
-        //compontenten toevoegen aan DES paneel
+        
+        //componenten toevoegen aan paneel
+        // DES row 0
         gbc.gridx = 0;
         gbc.gridy = 0;
-        pDes.add(new JLabel("File:"), gbc);
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        pDes.add(new JLabel("Key:"), gbc);
+        pDes.add(new JLabel("Decrypted File:"), gbc);
         gbc.gridx = 1;
         gbc.gridy = 0;
-        txtDesFile = new JTextField(10);
-        pDes.add(txtDesFile, gbc);
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        txtDesKey = new JTextField(10);
-        pDes.add(txtDesKey, gbc);
+        txtDesDecryptedFile = new JTextField(10);
+        pDes.add(txtDesDecryptedFile, gbc);
         gbc.gridx = 2;
         gbc.gridy = 0;
         btnDesFile = new JButton("Select File");
         btnDesFile.addActionListener(this);
         pDes.add(btnDesFile, gbc);
+        
+        // DES row 1
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        pDes.add(new JLabel("Encrypted File:"), gbc);
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        txtDesEncryptedFile = new JTextField(10);
+        pDes.add(txtDesEncryptedFile, gbc);
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        btnDesOutputFile = new JButton("Select File");
+        btnDesOutputFile.addActionListener(this);
+        pDes.add(btnDesOutputFile, gbc);
+        // DES row 2
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        pDes.add(new JLabel("Key:"), gbc);
         gbc.gridx = 1;
         gbc.gridy = 3;
-        btnDesDecode = new JButton("Start Decryption");
-        btnDesDecode.addActionListener(this);
-        pDes.add(btnDesDecode, gbc);
+        txtDesKey = new JTextField(10);
+        pDes.add(txtDesKey, gbc);
         gbc.gridx = 2;
         gbc.gridy = 3;
+        cbUse3des = new JCheckBox("Use 3DES");
+        pDes.add(cbUse3des, gbc);
+ 
+        // DES row 3
+        gbc.gridx = 1;
+        gbc.gridy = 4;
         btnDesEncode = new JButton("Start Encryption");
         btnDesEncode.addActionListener(this);
         pDes.add(btnDesEncode, gbc);
+        gbc.gridx = 2;
+        gbc.gridy = 4;
+        btnDesDecode = new JButton("Start Decryption");
+        btnDesDecode.addActionListener(this);
+        pDes.add(btnDesDecode, gbc);
 
         //des paneel toevoegen aan frame
         pMain.add(pDes, BorderLayout.WEST);
 
-        //paneel stenagografie aanmaken
+        //paneel steganography aanmaken
         JPanel pStegano = new JPanel(new GridBagLayout());
         pStegano.setBorder(BorderFactory.createTitledBorder("Steganography"));
 
-        //compontenten toevoegen aan Stegano paneel
         gbc.gridx = 0;
         gbc.gridy = 0;
-        pStegano.add(new JLabel("Text:"), gbc);
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        pStegano.add(new JLabel("Image:"), gbc);
+        pStegano.add(new JLabel("Normal image:"), gbc);
         gbc.gridx = 1;
         gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        txtSteganoText = new JTextArea(5, 25);
-        Border border = BorderFactory.createLineBorder(Color.BLACK);
-        JScrollPane spStegano = new JScrollPane(txtSteganoText);
-        txtSteganoText.setBorder(border);
-        pStegano.add(spStegano, gbc);
-        gbc.gridx = 1;
-        gbc.gridy = 1;
         gbc.gridwidth = 1;
         txtSteganoImage = new JTextField(10);
         pStegano.add(txtSteganoImage, gbc);
         gbc.gridx = 2;
-        gbc.gridy = 1;
-        btnSteganoImage = new JButton("Select Image");
+        gbc.gridy = 0;
+        btnSteganoImage = new JButton("Select image");
         btnSteganoImage.addActionListener(this);
         pStegano.add(btnSteganoImage, gbc);
+        
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        pStegano.add(new JLabel("Encoded image:"), gbc);
         gbc.gridx = 1;
-        gbc.gridy = 3;
-        btnSteganoDecode = new JButton("Start Decryption");
-        btnSteganoDecode.addActionListener(this);
-        pStegano.add(btnSteganoDecode, gbc);
+        gbc.gridy = 1;
+        txtSteganoOutputImage = new JTextField(10);
+        pStegano.add(txtSteganoOutputImage, gbc);
         gbc.gridx = 2;
+        gbc.gridy = 1;
+        btnSteganoOutputImage = new JButton("Select image");
+        btnSteganoOutputImage.addActionListener(this);
+        pStegano.add(btnSteganoOutputImage, gbc);
+        
+        //compontenten toevoegen aan Stegano paneel
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        pStegano.add(new JLabel("Input/output file:"), gbc);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        txtSteganoFile = new JTextField(10);
+        pStegano.add(txtSteganoFile, gbc);
+        gbc.gridx = 2;
+        gbc.gridy = 2;
+        btnSteganoFile = new JButton("Select file");
+        btnSteganoFile.addActionListener(this);
+        pStegano.add(btnSteganoFile, gbc);
+        
+        gbc.gridx = 1;
         gbc.gridy = 3;
         btnSteganoEncode = new JButton("Start Encryption");
         btnSteganoEncode.addActionListener(this);
         pStegano.add(btnSteganoEncode, gbc);
+        gbc.gridx = 2;
+        gbc.gridy = 3;
+        btnSteganoDecode = new JButton("Start Decryption");
+        btnSteganoDecode.addActionListener(this);
+        pStegano.add(btnSteganoDecode, gbc);
 
         //stenago paneel toevoegen aan frame
         pMain.add(pStegano, BorderLayout.EAST);
@@ -152,14 +191,13 @@ public class CryptoGen extends JFrame implements ActionListener {
         txtConsole = new JTextArea(20, 20);
         JScrollPane scrollPane = new JScrollPane(txtConsole);
         pMain.add(scrollPane, BorderLayout.SOUTH);
+        
+        // add console textarea to helper class
+        ConsoleHelper.console = this.txtConsole;
     }
 
     public static void main(String[] args) {
-        CryptoGen cg = new CryptoGen();
-
-        cg.pack();
-        cg.setResizable(false);
-        cg.setVisible(true);
+        new CryptoGen();
     }
 
     @Override
@@ -171,7 +209,22 @@ public class CryptoGen extends JFrame implements ActionListener {
 
             //check of een file is geselecteerd
             if (fch.getSelectedFile() != null) {
-                txtDesFile.setText(fch.getSelectedFile().getAbsolutePath());
+                String filePath = fch.getSelectedFile().getAbsolutePath();
+                txtDesDecryptedFile.setText(filePath);
+                txtDesEncryptedFile.setText(filePath + "." + "des");
+            }
+        } else if (e.getSource() == btnDesOutputFile) {
+            //create file choose window
+            JFileChooser fch = new JFileChooser();
+            fch.showSaveDialog(this);
+
+            //check of een file is geselecteerd
+            if (fch.getSelectedFile() != null) {
+                String filePath = fch.getSelectedFile().getAbsolutePath();
+                txtDesEncryptedFile.setText(filePath);
+                
+                if(txtDesDecryptedFile.getText().equals("") && filePath.indexOf(".des") != -1)
+                    txtDesDecryptedFile.setText(filePath.substring(0, filePath.indexOf(".des")));
             }
         } else if (e.getSource() == btnSteganoImage) {
             //create file choose window
@@ -182,52 +235,166 @@ public class CryptoGen extends JFrame implements ActionListener {
             fch.showSaveDialog(this);
 
             //check of een file is geselecteerd
+            if (fch.getSelectedFile() != null) {    
+                String path = fch.getSelectedFile().getAbsolutePath();
+                txtSteganoImage.setText(path);
+                
+                //autocomplete output path
+                int dotPos = path.lastIndexOf(".");
+                String outputPath = path.substring(0, dotPos) + ".encoded" + path.substring(dotPos);
+                txtSteganoOutputImage.setText(outputPath);
+            }
+        } else if (e.getSource() == btnSteganoOutputImage) {
+            //create file choose window
+            JFileChooser fch = new JFileChooser();
+            fch.setAcceptAllFileFilterUsed(false);
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("BMP", "bmp", "bmp");
+            fch.setFileFilter(filter);
+            fch.showSaveDialog(this);
+
+            //check of een file is geselecteerd
             if (fch.getSelectedFile() != null) {
-                txtSteganoImage.setText(fch.getSelectedFile().getAbsolutePath());
+                String path = fch.getSelectedFile().getAbsolutePath();
+                txtSteganoOutputImage.setText(path);
             }
         } else if (e.getSource() == btnSteganoEncode) {
-            //set Console window
-            Steganography.console = txtConsole;
-            Steganography.DEBUG = true;
-
-            txtConsole.append("Encoding started!" + "\n\r");
-
+            
+            String inputImage = txtSteganoImage.getText();
+            String outputImage = txtSteganoOutputImage.getText();
+            String inputFilePath = txtSteganoFile.getText();
+            
+            if(inputImage.equals("")) {
+                ConsoleHelper.appendError("You must enter a normal image. This is the source image that will be used to embed the file into.");
+                return;
+            }
+            
+            if(outputImage.equals("")) {
+                ConsoleHelper.appendError("You must choose a location for the encoded image.");
+                return;
+            }
+            
+            if(inputFilePath.equals("")) {
+                ConsoleHelper.appendError("You must enter an input file that you want to have encrypted.");
+                return;
+            }
+            
+            if(!CryptoGen.isFile(inputImage)) {
+                ConsoleHelper.appendError("You must enter a valid \"normal image\" path.");
+                return;
+            }
+            
+            if(!CryptoGen.isFile(inputFilePath)) {
+                ConsoleHelper.appendError("You must enter a valid \"input file\" path.");
+                return;
+            }
+            
+            ConsoleHelper.start("steganography encoding");
             //start encoding
-            BufferedImage img = Steganography.encode(txtSteganoImage.getText(), txtSteganoText.getText());
-            JFileChooser fch = new JFileChooser();
+            BufferedImage img = Steganography.encode(inputImage, inputFilePath);
+            writeImage(outputImage, "bmp", img);
+            
+            ConsoleHelper.finish("steganography encoding");
+            
+        } else if (e.getSource() == btnSteganoDecode) {
+            
+            String imagePath = txtSteganoOutputImage.getText();
+            String outputPath = txtSteganoFile.getText();
+            
+            if(imagePath.equals("")) {
+                ConsoleHelper.appendError("You must choose an encoded image. This is an image that has data embedded with steganography.");
+                return;
+            }
+            
+            if(outputPath.equals("")) {
+                ConsoleHelper.appendError("You must choose a location for the output file.");
+                return;
+            }
+            
+            ConsoleHelper.start("steganography decoding");
+            Steganography.decode(imagePath, outputPath);
+            ConsoleHelper.finish("steganography decoding");
+            
+        } else if (e.getSource() == btnDesEncode) {
+            
+            String inputFile = txtDesDecryptedFile.getText();
+            String outputFile = txtDesEncryptedFile.getText();
+            String key = txtDesKey.getText();
 
-            int returnVal = fch.showSaveDialog(this);
-
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                writeImage(fch.getSelectedFile().getAbsolutePath(), "bmp", img);
+            if(key.equals("")) {
+                ConsoleHelper.appendError("You must enter a key first.");
+                return;
+            }
+            
+            if(inputFile.equals("")) {
+                ConsoleHelper.appendError("You must choose a decrypted file first.");
+                return;
             }
 
-            txtSteganoText.setText("");
+            if(outputFile.equals("")) {
+                ConsoleHelper.appendError("You must choose a location for the encrypted file.");
+                return;
+            }
+
+            if(!CryptoGen.isFile(inputFile)) {
+                ConsoleHelper.appendError("You must enter a valid path to the decrypted file.");
+                return;
+            }
             
-            txtConsole.append("Encoding finished!" + "\n\r");
-        } else if (e.getSource() == btnSteganoDecode) {
-            Steganography.console = txtConsole;
-            Steganography.DEBUG = true;
             
-            txtConsole.append("Decoding started!" + "\n\r");
+            if(cbUse3des.isSelected()) {
+                ConsoleHelper.start("3des encryption");
+                //des.encryptFile3Des(inputFile, outputFile, key);
+                des.encryptFile3Des(inputFile, key);
+                ConsoleHelper.finish("3des encryption");
+            } else {
+                ConsoleHelper.start("des encryption");
+                //des.encryptFile(inputFile, outputFile, key);
+                des.encryptFile(inputFile, key);
+                ConsoleHelper.finish("des encryption");
+            }
+
             
-            String str = Steganography.decode(txtSteganoImage.getText());
-            
-            txtSteganoText.setText(str);
-            
-            txtConsole.append("Decoding finished!" + "\n\r");
-        } else if (e.getSource() == btnDesEncode) {
-            txtConsole.append("Encrypting started!" + "\n\r");
-            long before = System.currentTimeMillis();
-            des.encryptFile(txtDesFile.getText(), txtDesKey.getText());
-            long after = System.currentTimeMillis();
-            txtConsole.append("Time encrypting in milliseconds " + (after - before) + "\n\r");
         } else if (e.getSource() == btnDesDecode) {
-            txtConsole.append("Decrypting started!" + "\n\r");
-            long before = System.currentTimeMillis();
-            des.decryptFile(txtDesFile.getText(), txtDesKey.getText());
-            long after = System.currentTimeMillis();
-            txtConsole.append("Time decrypting in milliseconds " + (after - before) + "\n\r");
+            
+            String inputFile = txtDesEncryptedFile.getText();
+            String outputFile = txtDesDecryptedFile.getText();
+            String key = txtDesKey.getText();
+
+            if(key.equals("")) {
+                ConsoleHelper.appendError("You must enter a key first.");
+                return;
+            }
+            if(inputFile.equals("") || !CryptoGen.isFile(inputFile)) {
+                ConsoleHelper.appendError("You must enter a valid path to the encrypted file.");
+                return;
+            }
+            
+            if(outputFile.equals("")) {
+                ConsoleHelper.appendError("You must choose a location for the decrypted file.");
+                return;
+            }
+            
+            if(cbUse3des.isSelected()) {
+                ConsoleHelper.start("3des decryption");
+                //des.decryptFile3Des(inputFile, outputFile, key);
+                des.decryptFile3Des(inputFile, key);
+                ConsoleHelper.finish("3des decryption");
+            } else {
+                ConsoleHelper.start("des decryption");
+                //des.decryptFile(inputFile, outputFile, key);
+                des.decryptFile(inputFile, key);
+                ConsoleHelper.finish("des decryption");
+            }
+            
+        } else if (e.getSource() == btnSteganoFile) {
+            //create file choose window
+            JFileChooser fch = new JFileChooser();
+            fch.showSaveDialog(this);
+
+            //check of een file is geselecteerd
+            if (fch.getSelectedFile() != null) {
+                txtSteganoFile.setText(fch.getSelectedFile().getAbsolutePath());
+            }
         }
 
     }
@@ -239,8 +406,16 @@ public class CryptoGen extends JFrame implements ActionListener {
             f.delete();
             ImageIO.write(img, ext, f);
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null,
-                    "Error while saving file!!", "Error", JOptionPane.ERROR_MESSAGE);
+            ConsoleHelper.appendError("Error while saving file.");
+            ConsoleHelper.appendError(e.getMessage());
         }
+    }
+    
+    public static boolean isFile (String path) {
+        File file = new File(path);
+        if(file.exists())
+            return true;
+        else 
+            return false;
     }
 }

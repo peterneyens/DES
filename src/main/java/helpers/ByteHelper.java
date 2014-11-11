@@ -13,6 +13,13 @@ public class ByteHelper {
     public static byte joinBlocks(byte block1, byte block2) {
         return (byte) (block1 << 4 | block2);
     }
+    
+    // based on http://stackoverflow.com/a/784842
+    public static byte[] concatBlocks(byte[] left, byte[] right) {
+        byte[] result = Arrays.copyOf(left, left.length + right.length);
+        System.arraycopy(right, 0, result, left.length, right.length);
+        return result;
+    }
 
     // Herschikt de bits in de source byte array volgens de positions array
     // - Lengte van resultaat wordt bepaald door lengte van positions array
@@ -128,13 +135,6 @@ public class ByteHelper {
             return Arrays.copyOfRange(bytes, 1, bytes.length);
         }
         return bytes;
-    }
-
-    // based on http://stackoverflow.com/a/784842
-    public static byte[] concatBlocks(byte[] left, byte[] right) {
-        byte[] result = Arrays.copyOf(left, left.length + right.length);
-        System.arraycopy(right, 0, result, left.length, right.length);
-        return result;
     }
 
 }
