@@ -6,6 +6,10 @@ public interface DesService {
     
     public void decryptFile(String filePath, String key);
 
+    public void encryptFile3Des(String filePath, String key);
+    
+    public void decryptFile3Des(String filePath, String key);
+
     public void encryptFile(String filePath, byte[][][] subKeys);
     
     public void decryptFile(String filePath, byte[][][] subKeys);
