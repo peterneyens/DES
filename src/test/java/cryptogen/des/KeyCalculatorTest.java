@@ -89,4 +89,15 @@ public class KeyCalculatorTest {
         assertArrayEquals(expectedSubKeys, subKeys);
     }
 
+    @Test
+    public void testDesSubKeys() {
+        byte[][][] keys = KeyCalculator.generate("test");
+        assertEquals(1, keys.length);
+    }
+
+    @Test
+    public void test3DesSubKeys() {
+        byte[][][] keys = KeyCalculator.generateFor3Des("test");
+        assertEquals(3, keys.length);
+    }
 }
