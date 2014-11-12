@@ -387,9 +387,6 @@ public class CryptoGen extends JFrame implements ActionListener {
     
     public static boolean isFile (String path) {
         File file = new File(path);
-        if(file.exists())
-            return true;
-        else 
-            return false;
+        return file.exists();
     }
 }

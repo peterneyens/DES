@@ -141,5 +141,36 @@ public class ByteHelper {
         return bytes;
     }
 
+    /**
+     * Get the first half of the specified block.
+     * The significant bits are on the left.
+     * eg. when a block with an odd length is split in half, only the first 4 bits
+     * of the last byte are significant.
+     *
+     * @param block the block to be split in half
+     * @return byte[] the first half of the specified block
+     */
+    public static byte[] getFirstHalf(byte[] block) {
+        return Arrays.copyOfRange(block, 0, (int) Math.ceil(block.length / 2.0));
+    }
+
+    /**
+     * Get the second half of the specified block.
+     * The significant bits are on the left.
+     * eg. when a block with an odd length is split in half, only the first 4 bits
+     * of the last byte are significant.
+     *
+     * @param block the block to be split in half
+     * @return byte[] the second half of the specified block
+     */
+    public static byte[] getSecondHalf(byte[] block) {
+        byte[] temp = Arrays.copyOfRange(block, block.length / 2, block.length);
+        // middle of block is in the middle of a byte
+        if ( (block.length / 2d) % 1 == 0.5) {
+            temp = ByteHelper.rotateLeft(temp, temp.length * 8, 4);
+        }
+        return temp;
+    } 
+
 }
 

@@ -70,8 +70,8 @@ public class DesAlgorithm {
 
         byte[] prevLeft, prevRight, left, right;
         // verdeel in initiele linkse en rechtse blok
-        prevLeft = Arrays.copyOfRange(permutatedBlock, 0, (int) Math.ceil(permutatedBlock.length / 2.0));
-        prevRight = Arrays.copyOfRange(permutatedBlock, permutatedBlock.length / 2, permutatedBlock.length);
+        prevLeft = ByteHelper.getFirstHalf(permutatedBlock);
+        prevRight = ByteHelper.getSecondHalf(permutatedBlock);
 
         // bereken L1 R1 tem L16 R16
         for (int i = 1; i <= 16; i++) {
@@ -114,20 +114,5 @@ public class DesAlgorithm {
     public static byte[] decryptBlock(byte[] block, byte[][] reversedSubKeys) throws IllegalArgumentException {
         return encryptBlock(block, reversedSubKeys);
     }
-
-    /*
-    private static byte[][][] reverseSubKeys(byte[][][] subKeys) {
-        byte[][][] reversedSubKeys = new byte[subKeys.length][][];
-        for (int i = 0; i < subKeys.length; i++) {
-            int reversedI = subKeys.length - 1 - i;
-            reversedSubKeys[reversedI] = new byte[subKeys[i].length][];
-            for (int j = 0; j < subKeys[i].length; j++) {
-                int reversedJ = subKeys[i].length - 1 - j;
-                reversedSubKeys[reversedI][reversedJ] = subKeys[i][j];
-            }
-        }
-        return reversedSubKeys;
-    }
-    */
 
 }
