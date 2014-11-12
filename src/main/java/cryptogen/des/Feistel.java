@@ -96,10 +96,14 @@ public class Feistel {
             throw new IllegalArgumentException("Block should be 4 bytes long.");
         else if (subkey.length != 6)
             throw new IllegalArgumentException("Key should be 6 bytes long.");
-
+        
+        // Send data through expansion table
         byte[] transmutedBlock = ByteHelper.permutFunc(block, Feistel.expansionTabel42Bits);
+        // xor data with subkey
         byte[] xoredBytes = ByteHelper.xorByteBlocks(transmutedBlock, subkey);
+        // execute S function on data
         byte[] result = executeS(xoredBytes);
+        // send data through permutation table
         byte[] feistelResult = ByteHelper.permutFunc(result, Feistel.permutatieTabel32Bits);
         return feistelResult;
     }
@@ -111,6 +115,7 @@ public class Feistel {
         // execute S function on each byte
         // each resulting byte contains 4 bits
         for (int i = 0; i < helperBlock.length; i++) {
+            ByteHelper.printByte(helperBlock[i]);
             helperBlock[i] = S(helperBlock[i], Feistel.s[i]);
         }
 
@@ -159,7 +164,7 @@ public class Feistel {
                 // voeg laatste 6 bits toe aan eerste twee bits
                 newByte |= lastSixBits;
             }
-
+            
             bytes[i] = newByte;
         }
 

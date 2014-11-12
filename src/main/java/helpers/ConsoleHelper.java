@@ -35,6 +35,22 @@ public class ConsoleHelper {
         console.append(message + NEWLINE);
     }
     
+    public static void appendSuccess(String message) {
+        try {
+            console.append(message + NEWLINE);
+            
+            int pos = console.getText().lastIndexOf(message);
+            console.getHighlighter().addHighlight(pos,
+                    pos + message.length(),
+                    new DefaultHighlighter.DefaultHighlightPainter(GREEN));
+            
+            scrollToBottom();
+            
+        } catch (BadLocationException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+    
     public static void appendError(String message) {
         try {
             console.append(message + NEWLINE);

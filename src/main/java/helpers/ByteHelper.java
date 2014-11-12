@@ -126,6 +126,10 @@ public class ByteHelper {
         }
         System.out.println();
     }
+    
+    public static void printByte(byte b){
+        System.out.print(Integer.toBinaryString(b & 255 | 256).substring(1) + " \n");
+    }
 
     public static byte[] convertBinaryStringToByteArray(String binaryString) {
         byte[] bytes = new BigInteger(binaryString.replace(" ", ""), 2).toByteArray();

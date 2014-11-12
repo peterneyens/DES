@@ -1,5 +1,6 @@
 package cryptogen.des;
 
+import helpers.ConsoleHelper;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,7 +70,8 @@ public class AsyncDesService extends AbstractDesService {
             System.out.println("Done writing to file");
 
             System.out.println("Setting tasks " + (afterTasks - before) + " Writing " + (afterWriting - afterTasks));
-
+            
+            ConsoleHelper.appendSuccess("Writing encrypted file to: " + outputFile.getPath());
             outputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -121,8 +123,9 @@ public class AsyncDesService extends AbstractDesService {
                 outputStream.write(decryptedBlock);
                 //System.out.println("Blok " + i +" weggeschreven");
             }
+            
             System.out.println("Done writing to file");
-
+            ConsoleHelper.appendSuccess("Writing decrypted file to: " + outputFile.getPath());
 
             outputStream.close();
         } catch (FileNotFoundException e) {
