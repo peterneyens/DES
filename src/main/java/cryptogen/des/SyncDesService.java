@@ -1,5 +1,6 @@
 package cryptogen.des;
 
+import helpers.ConsoleHelper;
 import java.io.*;
 import java.util.Arrays;
 
@@ -39,6 +40,11 @@ public class SyncDesService extends AbstractDesService {
 
                 // schrijf geencrypteerd blok weg naar output bestand
                 outputStream.write(encryptedBlock);
+
+                // progress to GUI
+                if (nbBlocks % (nbTotalBlocks / 10) == 0) {
+                    ConsoleHelper.appendPercentCompleted((int) nbBlocks, (int) nbTotalBlocks);
+                }
 
                 block = new byte[BLOCK_SIZE_IN_BYTES];
             }
@@ -82,6 +88,11 @@ public class SyncDesService extends AbstractDesService {
                     outputStream.write(blockWithoutPadding);
                 } else {
                     outputStream.write(decryptedBlock);
+                }
+                
+                // progress to GUI
+                if (nbBlocks % (nbTotalBlocks / 10) == 0) {
+                    ConsoleHelper.appendPercentCompleted((int) nbBlocks, (int) nbTotalBlocks);
                 }
 
                 block = new byte[BLOCK_SIZE_IN_BYTES];
