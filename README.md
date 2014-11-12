@@ -1,15 +1,33 @@
+CRYPTOGEN
+=========
+
+A Java/Scala implementation of the [DES algorithm](http://en.wikipedia.org/wiki/Data_Encryption_Standard "DES algorithm on Wikipedia") and a  [Steganography](http://en.wikipedia.org/wiki/Steganography) function for a course on network and data security.
+
 DES
-===
+---
 
-A Java/Scala implementation of the [DES algorithm](http://en.wikipedia.org/wiki/Data_Encryption_Standard "DES algorithm on Wikipedia") for a course on data and network security.
+In the DES algorithm a file is split in multiple blocks of data, and these blocks of data are encrypted individually. Four different DesService are included which use a different method of concurrency to encrypt or decrypt these blocks.
 
-Includes an asynchronous version using Java 8 CompletableFutures and another version in Scala using Akka actors.
+The four DesService are 
+- a synchronous DES implementation
+- an asynchronous version using Java 8 CompletableFutures 
+- another asynchronous version in Scala using Akka actors
+- and a (naive) distributed version in Scala also using Akka.
 
-## Requirements
+
+Steganography
+-------------
+
+The Steganography uses the least significant bit method and can encode/decode data in a BMP image.
+
+
+Requirements
+------------
 
 Java 8 and SBT
 
-## Run
 
-    $ sbt
-    > run
+Run
+---
+
+    $ sbt "run-main cryptogen.CryptoGen"
