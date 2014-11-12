@@ -73,7 +73,7 @@ public class KeyCalculator {
       
         // nDes cannot be too big
         // every generation of subkeys needs a key of 8 bytes
-        nDes =  Math.max(nDes, (hash.length / 8)); 
+        nDes =  Math.min(nDes, (hash.length / 8)); 
 
         //  generate nDes times 16 subkeys
         byte[][][] subKeysNDes = new byte[nDes][][];
