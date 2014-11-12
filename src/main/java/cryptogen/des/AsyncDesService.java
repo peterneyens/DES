@@ -1,5 +1,6 @@
 package cryptogen.des;
 
+import helpers.ConsoleHelper;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,8 +54,8 @@ public class AsyncDesService extends AbstractDesService {
             }
             inputStream.close();
 
-            System.out.println("Done setting tasks");
             long afterTasks = System.nanoTime();
+            ConsoleHelper.append("Done creating futures (" + (afterTasks - before) / 1000000 + " millis)");
 
             futures.stream().forEachOrdered(encryptedBlock -> {
                 try {
@@ -66,9 +67,7 @@ public class AsyncDesService extends AbstractDesService {
             });
 
             long afterWriting = System.nanoTime();
-            System.out.println("Done writing to file");
-
-            System.out.println("Setting tasks " + (afterTasks - before) + " Writing " + (afterWriting - afterTasks));
+            ConsoleHelper.append("Done writing to file (" + (afterWriting - afterTasks) / 1000000 + " millis)");
 
             outputStream.close();
         } catch (Exception e) {
@@ -120,6 +119,11 @@ public class AsyncDesService extends AbstractDesService {
 
                 outputStream.write(decryptedBlock);
                 //System.out.println("Blok " + i +" weggeschreven");
+
+                // progress to GUI
+                if (i % (nbTotalBlocks / 10) == 0) {
+                    ConsoleHelper.appendPercentCompleted(i, (int) nbTotalBlocks);
+                }
             }
             System.out.println("Done writing to file");
 
