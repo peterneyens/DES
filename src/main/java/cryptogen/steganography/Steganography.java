@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package cryptogen.steganography;
 
 import helpers.ConsoleHelper;
@@ -168,7 +163,7 @@ public class Steganography {
     }
 
     /*
-     Kopieerd de ingegeven foto en geeft ene kopie hiervan terug
+     Kopieert de ingegeven foto en geeft ene kopie hiervan terug
      */
     public static BufferedImage cloneImage(BufferedImage selectedImage) {
         BufferedImage image = new BufferedImage(selectedImage.getWidth(), selectedImage.getHeight(), selectedImage.getType());
@@ -251,7 +246,7 @@ public class Steganography {
      -------- &
      00000001
      
-     --> we hebben de waarde van de bit, nu de bit nog in de igage byte stoppen:
+     --> we hebben de waarde van de bit, nu de bit nog in de image byte stoppen:
     
      We doen een OR operator op 0xFE en de gevonden bit om zo de laatste bit op 0 of 1 te zetten
     
@@ -292,7 +287,7 @@ public class Steganography {
                     ConsoleHelper.appendPercentCompleted(i, bVal.length);
                 
 
-                //loop door de 8 bits vat de i byte
+                //loop door de 8 bits van de i byte
                 for (int bit = 7; bit >= 0; --bit, ++offset) { //increment offset na elke iteratie
                     //desbetreffende bit uit tekst byte ophalen
                     int b = (bVal[i] >>> bit) & 1;
@@ -349,13 +344,13 @@ public class Steganography {
         //00000000 00000000 00000001 00011111 = 287
         //11111111 00000000 00000000 00000000 = 4278190080 or 0xFF000000
         //------------------------------------ AND
-        //00000000 00000000 00000000 00000000 = 31
+        //00000000 00000000 00000000 00000000 = 0
         //
         //berekening 1de byte
         //00000000 00000000 00000001 00011111 = 287
         //00000000 11111111 00000000 00000000 = 16711680 or 0x00FF0000
         //------------------------------------ AND
-        //00000000 00000000 00000000 00000000 = 31
+        //00000000 00000000 00000000 00000000 = 0
         //
         //berekening 2de byte
         //00000000 00000000 00000001 00011111 = 287

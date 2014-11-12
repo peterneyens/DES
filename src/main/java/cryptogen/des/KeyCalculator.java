@@ -110,8 +110,8 @@ public class KeyCalculator {
 
         // Splitst de source array in twee tabellen (C, D)
         byte[] permutatedBlock = ByteHelper.permutFunc(sourceCD, permutatieTabel1);
-        byte[] C = getFirstHalf(permutatedBlock);
-        byte[] D = getSecondHalf(permutatedBlock);
+        byte[] C = ByteHelper.getFirstHalf(permutatedBlock);
+        byte[] D = ByteHelper.getSecondHalf(permutatedBlock);
 
         //Array om de keys in op te slaan
         byte[][] keys = new byte[16][6];
@@ -130,37 +130,6 @@ public class KeyCalculator {
 
         // TODO check key niet 00000000 of 111111111, of subkeys vaak gelijk, ...
         return keys;
-    }
-
-    /**
-     * Get the first half of the specified block.
-     * The significant bits are on the left.
-     * eg. when a block with an odd length is split in half, only the first 4 bits
-     * of the last byte are significant.
-     *
-     * @param block the block to be split in half
-     * @return byte[] the first half of the specified block
-     */
-    private static byte[] getFirstHalf(byte[] block) {
-        return Arrays.copyOfRange(block, 0, (int) Math.ceil(block.length / 2.0));
-    }
-
-    /**
-     * Get the second half of the specified block.
-     * The significant bits are on the left.
-     * eg. when a block with an odd length is split in half, only the first 4 bits
-     * of the last byte are significant.
-     *
-     * @param block the block to be split in half
-     * @return byte[] the first half of the specified block
-     */
-    private static byte[] getSecondHalf(byte[] block) {
-        byte[] temp = Arrays.copyOfRange(block, block.length / 2, block.length);
-        // middle of block is in the middle of a byte
-        if ( (block.length / 2d) % 1 == 0.5) {
-            temp = ByteHelper.rotateLeft(temp, temp.length * 8, 4);
-        }
-        return temp;
     }
 
     /**
