@@ -115,7 +115,7 @@ public class Feistel {
         // execute S function on each byte
         // each resulting byte contains 4 bits
         for (int i = 0; i < helperBlock.length; i++) {
-            ByteHelper.printByte(helperBlock[i]);
+            //ByteHelper.printByte(helperBlock[i]);
             helperBlock[i] = S(helperBlock[i], Feistel.s[i]);
         }
 
