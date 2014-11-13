@@ -127,7 +127,8 @@ public class AsyncDesService extends AbstractDesService {
                 //System.out.println("Blok " + i +" weggeschreven");
 
                 // progress to GUI
-                if (i % (nbTotalBlocks / 10) == 0) {
+                final long tenPercent = nbTotalBlocks / 10;
+                if (tenPercent != 0 && (i % tenPercent == 0)) {
                     ConsoleHelper.appendPercentCompleted(i, (int) nbTotalBlocks);
                 }
             }

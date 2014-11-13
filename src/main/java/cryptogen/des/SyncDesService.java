@@ -42,7 +42,8 @@ public class SyncDesService extends AbstractDesService {
                 outputStream.write(encryptedBlock);
 
                 // progress to GUI
-                if (nbBlocks % (nbTotalBlocks / 10) == 0) {
+                final long tenPercent = nbTotalBlocks / 10;
+                if (tenPercent != 0 && nbBlocks % tenPercent == 0) {
                     ConsoleHelper.appendPercentCompleted((int) nbBlocks, (int) nbTotalBlocks);
                 }
 
@@ -91,7 +92,8 @@ public class SyncDesService extends AbstractDesService {
                 }
                 
                 // progress to GUI
-                if (nbBlocks % (nbTotalBlocks / 10) == 0) {
+                final long tenPercent = nbTotalBlocks / 10;
+                if (tenPercent != 0 && nbBlocks % tenPercent == 0) {
                     ConsoleHelper.appendPercentCompleted((int) nbBlocks, (int) nbTotalBlocks);
                 }
 
