@@ -38,6 +38,9 @@ class DistributedDesService extends AbstractDesService {
     val actor = DistributedDesService.system.actorOf(AkkaDesService.DesEncryptionActor.props(DistributedDesService.workMasterRef))
     actor ! DecryptFile(filePath, reversedSubKeys)
   }
+
+  /** Close the DistributedDesService */
+  override def close : Unit = DistributedDesService.system.shutdown()
  
 }
 

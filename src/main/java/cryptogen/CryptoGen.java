@@ -9,6 +9,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
@@ -52,7 +54,7 @@ public class CryptoGen extends JFrame implements ActionListener {
 
     public void initGui() {
         //configureren JFrame
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setTitle("Crypto Generator");
 
         //hoofdpaneel aanmaken
@@ -194,6 +196,18 @@ public class CryptoGen extends JFrame implements ActionListener {
         
         // add console textarea to helper class
         ConsoleHelper.console = this.txtConsole;
+
+        // add exit listener
+        this.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                System.out.println("Close");
+                e.getWindow().dispose();
+            }
+        });
+
     }
 
     public static void main(String[] args) {

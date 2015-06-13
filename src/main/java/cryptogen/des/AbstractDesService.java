@@ -31,4 +31,8 @@ public abstract class AbstractDesService implements DesService {
 
     abstract public void decryptFile(String filePath, byte[][][] reversedSubKeys); 
 
+    public void close() {
+        System.out.println("Close Des Service");
+    }
+
 }

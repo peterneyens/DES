@@ -41,6 +41,9 @@ class AkkaDesService extends AbstractDesService{
     actor ! DecryptFile(filePath, reversedSubKeys)
   }
   
+  /** Close the AkkaDesService */
+  override def close : Unit = AkkaDesService.system.shutdown()
+
 }
 
 

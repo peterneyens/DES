@@ -13,5 +13,7 @@ public interface DesService {
     public void encryptFile(String filePath, byte[][][] subKeys);
     
     public void decryptFile(String filePath, byte[][][] subKeys);
+
+    public void close();
     
 }
