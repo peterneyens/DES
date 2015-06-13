@@ -96,7 +96,7 @@ public class AsyncDesService extends AbstractDesService {
 
             final long nbBytesFileWithoutHeader = inputFile.length() - 1;
             final long nbTotalBlocks = (long) Math.ceil(nbBytesFileWithoutHeader / (double) BLOCK_SIZE_IN_BYTES);
-            System.out.println("file lenght " + inputFile.length()); 
+            System.out.println("file length " + inputFile.length()); 
             System.out.println("nbTotalBlocks " + nbTotalBlocks);
 
             final int nbBytesPadding = inputStream.read();
