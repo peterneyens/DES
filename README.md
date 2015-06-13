@@ -6,13 +6,14 @@ A Java/Scala implementation of the [DES algorithm](http://en.wikipedia.org/wiki/
 DES
 ---
 
-In the DES algorithm a file is split in multiple blocks of data, and these blocks of data are encrypted individually. Four different DesService are included which use a different method of concurrency to encrypt or decrypt these blocks.
+In the DES algorithm a file is split in multiple blocks of data, and these blocks of data are encrypted individually. Five different DesService are included which use a different method of concurrency to encrypt or decrypt these blocks.
 
 The four DesService are 
 - a synchronous DES implementation
 - an asynchronous version using Java 8 CompletableFutures 
 - another asynchronous version in Scala using Akka actors
-- and a (naive) distributed version in Scala also using Akka.
+- a (naive) distributed version in Scala using Akka Cluster
+- and a version in Scala using (the currently experimental) Akka Streams.
 
 
 Steganography
