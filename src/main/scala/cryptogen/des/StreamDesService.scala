@@ -32,33 +32,33 @@ object StreamDesService extends AbstractDesService {
     }
 
     val start = System.nanoTime
-  	val from = new File(filePath)  	
+    val from = new File(filePath)  	
     val toFileName = filePath + ".des"
 
-  	// write header to output file
-  	val output = new FileOutputStream(toFileName)
+    // write header to output file
+    val output = new FileOutputStream(toFileName)
     try {
-  		val header = calculateHeader(from)
-    	output.write(header)
-		} finally output.close()
+      val header = calculateHeader(from)
+      output.write(header)
+    } finally output.close()
 
     val to = new File(toFileName)
 
-	  val r: Future[Long] = Source.synchronousFile(from, chunkSize = SIZE)
+    val r: Future[Long] = Source.synchronousFile(from, chunkSize = SIZE)
       .map(bytes => bytes.toArray ++ Array.fill(SIZE - bytes.length)(0.toByte))
       .mapAsync(32)(encryptBlock)
       .map(ByteString(_))
-	    .toMat(Sink.synchronousFile(to, append = true))((_, bytesWritten) => bytesWritten)//(Keep.right)
-	    .run()
+      .toMat(Sink.synchronousFile(to, append = true))((_, bytesWritten) => bytesWritten)//(Keep.right)
+      .run()
 
-	  r.onComplete {
-	  	case Success(_) => 
+    r.onComplete {
+      case Success(_) => 
         println(s"Successfully encrypted file ${filePath.split('/').last}.")
         println(s"[Elapsed time = ${(System.nanoTime - start) / 1000000} millis]")
-	  	case Failure(e) => 
+      case Failure(e) => 
         println(e.getMessage)
-	  }
-	}
+    }
+  }
 
 
   /**
